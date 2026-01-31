@@ -1,0 +1,28 @@
+.PHONY: install dev build preview lint typecheck image clean
+
+BUILD_IMG := cy-price-watchdog-web
+BUILD_IMG_TAG := dev
+
+install:
+	yarn install
+
+dev:
+	yarn dev
+
+build:
+	yarn build
+
+preview:
+	yarn preview
+
+lint:
+	yarn lint
+
+typecheck:
+	yarn typecheck
+
+image:
+	docker build -t $(BUILD_IMG):$(BUILD_IMG_TAG) .
+
+clean:
+	rm -rf node_modules dist

@@ -1,0 +1,26 @@
+{
+  "name": "cy-price-watchdog-database",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Database schema and migrations for Cyprus Price Watchdog",
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate": "prisma migrate deploy",
+    "migrate:dev": "prisma migrate dev",
+    "studio": "prisma studio",
+    "push": "prisma db push",
+    "seed": "prisma db seed"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.7",
+    "@types/react": "^18.3.0",
+    "prisma": "^7.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

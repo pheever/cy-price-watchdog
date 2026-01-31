@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  externalId  Int        @unique
+  code        String
+  name        String
+  nameEnglish String
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([parentId])
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  externalId  Int      @unique
+  code        String
+  name        String
+  nameEnglish String
+  unit        String?
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  prices      Price[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([name])
+}
+
+model Store {
+  id          String   @id @default(uuid())
+  externalId  Int      @unique
+  name        String
+  nameEnglish String?
+  chain       String?
+  location    String?
+  prices      Price[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([chain])
+}
+
+model Price {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
+  price     Decimal  @db.Decimal(10, 2)
+  scrapedAt DateTime @default(now())
+
+  @@index([productId, scrapedAt])
+  @@index([storeId, scrapedAt])
+  @@index([scrapedAt])
+}

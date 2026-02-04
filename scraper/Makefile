@@ -1,7 +1,10 @@
+include ../.env
+export
+
 BUILD_DIR 		:= dist
 BUILD_IMG 		:= scraper
 BUILD_IMG_TAG := dev
-DB 						:= "postgresql://admin:admin_password@localhost:5432/scraper_db"
+DB 						:= "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:5432/$(POSTGRES_DB)"
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)

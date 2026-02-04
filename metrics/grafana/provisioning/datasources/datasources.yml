@@ -12,9 +12,9 @@ datasources:
     url: timescaledb:5432
     user: metrics_reader
     secureJsonData:
-      password: 'metrics_reader_pass'
+      password: '$METRICS_READER_PASS'
     jsonData:
-      database: metrics_db
+      database: $METRICS_DB
       sslmode: 'disable'
       maxOpenConns: 10
       maxIdleConns: 10
@@ -29,9 +29,9 @@ datasources:
     url: database:5432
     user: data_reader
     secureJsonData:
-      password: 'data_reader_pass'
+      password: '$DATA_READER_PASS'
     jsonData:
-      database: scraper_db
+      database: $POSTGRES_DB
       sslmode: 'disable'
       maxOpenConns: 5
       maxIdleConns: 5

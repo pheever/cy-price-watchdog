@@ -1,12 +1,65 @@
 # Infrastructure as Code
 
-Terraform configuration for deploying Cyprus Price Watchdog to Google Cloud.
+Terraform configuration for deploying Cyprus Price Watchdog to Google Cloud + Cloudflare.
+
+## Architecture
+
+```
+Internet --> Cloudflare Edge (DNS, CDN, Pages)
+                  |
+                  | Cloudflare Tunnel (outbound-initiated, no public IP)
+                  |
+            +---- VPC (private subnet) ----------------+
+            |                                           |
+            |   Cloud NAT (outbound internet only)      |
+            |                                           |
+            |   GCE VM (internal IP only)               |
+            |   +- cloudflared (tunnel daemon)          |
+            |   +- server (Next.js API, :3000)          |
+            |   +- postgres (scraper_db, :5432)         |
+            |   +- timescaledb (metrics_db, :5433)      |
+            |   +- telegraf (metrics collector, :8186)  |
+            |   +- grafana (dashboards, :3001)          |
+            |                                           |
+            |   Cloud Run Job (Direct VPC Egress)       |
+            |   +- scraper --> VM internal IP           |
+            |                                           |
+            +-------------------------------------------+
+```
+
+### Component Placement
+
+| Component | Platform | Notes |
+|-----------|----------|-------|
+| Web (Vite SPA) | Cloudflare Pages | Free, global CDN |
+| DNS | Cloudflare | Free |
+| API Server | GCE VM (Docker) | Co-located with databases |
+| PostgreSQL | GCE VM (Docker) | Scraper DB |
+| TimescaleDB | GCE VM (Docker) | Metrics DB |
+| Telegraf | GCE VM (Docker) | Metrics collection |
+| Grafana | GCE VM (Docker) | Dashboards, exposed via Cloudflare Tunnel |
+| Scraper | Cloud Run Job | Scheduled, pay-per-invocation |
+
+### Networking
+
+- The VM has **no public IP**. All inbound traffic flows through a Cloudflare Tunnel (`cloudflared` daemon on the VM creates an outbound-only connection to Cloudflare's edge).
+- **Cloud NAT** provides outbound internet access for the VM (Docker image pulls, OS updates).
+- **Cloud Run** reaches the VM via internal IP using Direct VPC Egress within the same VPC.
+- Firewall rules only allow internal VPC traffic between Cloud Run and the VM.
+- Cloudflare Tunnel selectively exposes services (server, grafana) on specific subdomains.
+
+### CI/CD
+
+- Container images are built via GitHub Actions and pushed to **GitHub Container Registry** (`ghcr.io`).
+- Cloud Run pulls the scraper image from `ghcr.io`.
+- The VM pulls service images from `ghcr.io`.
 
 ## Prerequisites
 
 - Terraform >= 1.0
 - Google Cloud SDK (`gcloud`)
 - A GCP project with billing enabled
+- A Cloudflare account with a registered domain
 
 ## Setup
 
@@ -40,35 +93,24 @@ make init
 | `make fmt` | Format Terraform files |
 | `make validate` | Validate configuration |
 
-## Resources Created
+## Terraform Providers
 
-- **Artifact Registry** - Container image storage
-- **Cloud SQL PostgreSQL** - Database instance
-- **Cloud Run Services** - API server and web application
-- **Cloud Run Job** - Scraper job
-- **Cloud Scheduler** - Runs scraper every 6 hours
-- **Secret Manager** - Database credentials
+| Provider | Purpose |
+|----------|---------|
+| `google` | GCE VM, VPC, Cloud NAT, Cloud Run, firewall rules |
+| `cloudflare` | DNS records, Tunnel, Pages project |
 
-## Deploying Images
+## Estimated Monthly Costs
 
-After applying Terraform, push container images:
+| Resource | Spec | Cost |
+|----------|------|------|
+| Cloudflare (Pages, DNS, Tunnel, CDN) | Free plan | €0 |
+| GCE VM | e2-small (0.5 vCPU, 2GB) | ~€8 |
+| Persistent disk | 30GB balanced | ~€3 |
+| Cloud NAT | Gateway + data processing | ~€1.50 |
+| Cloud Run (scraper) | Free tier (scheduled job) | ~€0 |
+| GitHub Container Registry | Free tier | €0 |
 
-```bash
-# Configure Docker for Artifact Registry
-gcloud auth configure-docker europe-west1-docker.pkg.dev
+**Total: ~€13/mo**
 
-# Build and push images
-cd ../scraper && docker build -t europe-west1-docker.pkg.dev/PROJECT_ID/cy-price-watchdog/scraper:latest . && docker push ...
-cd ../server && docker build -t europe-west1-docker.pkg.dev/PROJECT_ID/cy-price-watchdog/server:latest . && docker push ...
-cd ../web && docker build -t europe-west1-docker.pkg.dev/PROJECT_ID/cy-price-watchdog/web:latest . && docker push ...
-```
-
-## Costs
-
-Estimated monthly costs (minimal usage):
-- Cloud SQL (db-f1-micro): ~$10/month
-- Cloud Run: Pay per use (likely < $5/month)
-- Cloud Scheduler: Free tier
-- Artifact Registry: < $1/month
-
-Total: ~$15-20/month for low traffic
+Observed memory usage for VM-hosted services (server, postgres, timescaledb, telegraf, grafana, cloudflared) is ~650MB, well within the e2-small's 2GB limit.

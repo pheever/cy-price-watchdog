@@ -1,8 +1,11 @@
 .PHONY: install generate migrate migrate-dev studio push db-reset clean
 
+include ../.env
+export
+
 BUILD_IMG := cy-price-watchdog-migrate
 BUILD_IMG_TAG := dev
-DB 						:= "postgresql://admin:admin_password@localhost:5432/scraper_db"
+DB 						:= "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:5432/$(POSTGRES_DB)"
 
 install:
 	yarn install

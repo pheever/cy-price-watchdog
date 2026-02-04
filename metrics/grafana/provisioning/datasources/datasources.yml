@@ -1,0 +1,42 @@
+apiVersion: 1
+
+deleteDatasources:
+  - name: TimescaleDB
+    orgId: 1
+  - name: AppDatabase
+    orgId: 1
+
+datasources:
+  - name: TimescaleDB
+    type: postgres
+    url: timescaledb:5432
+    user: metrics_reader
+    secureJsonData:
+      password: 'metrics_reader_pass'
+    jsonData:
+      database: metrics_db
+      sslmode: 'disable'
+      maxOpenConns: 10
+      maxIdleConns: 10
+      maxIdleConnsAuto: true
+      connMaxLifetime: 14400
+      postgresVersion: 1500
+      timescaledb: true
+    isDefault: true
+
+  - name: AppDatabase
+    type: postgres
+    url: database:5432
+    user: data_reader
+    secureJsonData:
+      password: 'data_reader_pass'
+    jsonData:
+      database: scraper_db
+      sslmode: 'disable'
+      maxOpenConns: 5
+      maxIdleConns: 5
+      maxIdleConnsAuto: true
+      connMaxLifetime: 14400
+      postgresVersion: 1500
+      timescaledb: false
+    isDefault: false

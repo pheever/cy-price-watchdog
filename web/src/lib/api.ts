@@ -62,6 +62,37 @@ export interface Stats {
   };
 }
 
+export interface StoreStats {
+  storeId: string;
+  storeName: string;
+  storeChain: string | null;
+  current: number;
+  min: number;
+  max: number;
+  avg: number;
+  priceCount: number;
+}
+
+export interface DistrictStats {
+  district: string;
+  min: number;
+  max: number;
+  avg: number;
+  storeCount: number;
+}
+
+export interface ProductStats {
+  current: {
+    min: number | null;
+    max: number | null;
+    avg: number | null;
+    storeCount: number;
+    scrapedAt: string;
+  } | null;
+  byStore: StoreStats[];
+  byDistrict: DistrictStats[];
+}
+
 async function fetchApi<T>(endpoint: string): Promise<ApiResponse<T>> {
   const response = await fetch(`${API_BASE}${endpoint}`);
   return response.json() as Promise<ApiResponse<T>>;
@@ -89,5 +120,6 @@ export const api = {
     const query = searchParams.toString();
     return fetchApi<Price[]>(`/products/${id}/prices${query ? `?${query}` : ''}`);
   },
+  getProductStats: (id: string) => fetchApi<ProductStats>(`/products/${id}/stats`),
   getStores: () => fetchApi<Store[]>('/stores'),
 };

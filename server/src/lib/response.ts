@@ -19,27 +19,53 @@ export interface ApiResponse<T> {
   meta: ApiMeta | null;
 }
 
-export function success<T>(data: T, meta?: ApiMeta): NextResponse<ApiResponse<T>> {
-  return NextResponse.json({
-    data,
-    error: null,
-    meta: meta ?? null,
-  });
+export interface ResponseOptions {
+  cacheSeconds?: number;
+}
+
+// 30 minutes default cache
+const DEFAULT_CACHE_SECONDS = 30 * 60;
+
+function getCacheHeaders(seconds: number): HeadersInit {
+  return {
+    'Cache-Control': `public, s-maxage=${seconds}, stale-while-revalidate=${seconds * 2}`,
+  };
+}
+
+export function success<T>(data: T, meta?: ApiMeta, options?: ResponseOptions): NextResponse<ApiResponse<T>> {
+  const cacheSeconds = options?.cacheSeconds ?? DEFAULT_CACHE_SECONDS;
+  return NextResponse.json(
+    {
+      data,
+      error: null,
+      meta: meta ?? null,
+    },
+    {
+      headers: getCacheHeaders(cacheSeconds),
+    }
+  );
 }
 
 export function paginated<T>(
   data: T[],
-  options: { cursor?: string; hasNext: boolean; total?: number }
+  options: { cursor?: string; hasNext: boolean; total?: number },
+  responseOptions?: ResponseOptions
 ): NextResponse<ApiResponse<T[]>> {
-  return NextResponse.json({
-    data,
-    error: null,
-    meta: {
-      cursor: options.cursor,
-      hasNext: options.hasNext,
-      total: options.total,
+  const cacheSeconds = responseOptions?.cacheSeconds ?? DEFAULT_CACHE_SECONDS;
+  return NextResponse.json(
+    {
+      data,
+      error: null,
+      meta: {
+        cursor: options.cursor,
+        hasNext: options.hasNext,
+        total: options.total,
+      },
     },
-  });
+    {
+      headers: getCacheHeaders(cacheSeconds),
+    }
+  );
 }
 
 export function error(

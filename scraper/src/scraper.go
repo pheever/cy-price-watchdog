@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	ekalathiapi "github.com/pheever/cy-price-watchdog/scraper/src/ekalathi-api"
+	"github.com/pheever/cy-price-watchdog/scraper/src/metrics"
 )
 
 var logger *slog.Logger
@@ -26,11 +27,20 @@ func init() {
 
 // Scraper holds the HTTP client and database pool
 type Scraper struct {
-	client *http.Client
-	db     *pgxpool.Pool
+	client  *http.Client
+	db      *pgxpool.Pool
+	metrics *metrics.Collector
 }
 
-func NewScraper(dbURL string) (*Scraper, error) {
+// WorkItem represents an item in the retry queue
+type WorkItem[T any] struct {
+	Data    T
+	Retries int
+}
+
+const maxRetries = 3
+
+func NewScraper(dbURL string, metricsCollector *metrics.Collector) (*Scraper, error) {
 	pool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
@@ -52,7 +62,8 @@ func NewScraper(dbURL string) (*Scraper, error) {
 				ResponseHeaderTimeout: 120 * time.Second,
 			},
 		},
-		db: pool,
+		db:      pool,
+		metrics: metricsCollector,
 	}, nil
 }
 
@@ -100,7 +111,7 @@ func (s *Scraper) fetchCategories() ([]ekalathiapi.CategoryResponse, error) {
 
 func (s *Scraper) upsertCategory(ctx context.Context, externalID int, code, name, nameEnglish string, parentID *string) (string, error) {
 	var id string
-	now := time.Now()
+	now := time.Now().UTC()
 
 	err := s.db.QueryRow(ctx, `
 		INSERT INTO "Category" (id, "externalId", code, name, "nameEnglish", "parentId", "createdAt", "updatedAt")
@@ -162,7 +173,7 @@ func (s *Scraper) fetchProductsPage(categoryID, page int) ([]ekalathiapi.Product
 	req, err := ekalathiapi.GetProducts(ekalathiapi.ProductRequest{
 		CategoryIds: []int{categoryID},
 		Page:        page,
-		Size:        50,
+		Size:        20,
 	})
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to create products request: %w", err)
@@ -214,7 +225,7 @@ func (s *Scraper) fetchProducts(categoryID int) ([]ekalathiapi.Product, error) {
 
 func (s *Scraper) upsertProduct(ctx context.Context, externalID int, code, name, nameEnglish string, categoryID string) (string, error) {
 	var id string
-	now := time.Now()
+	now := time.Now().UTC()
 
 	err := s.db.QueryRow(ctx, `
 		INSERT INTO "Product" (id, "externalId", code, name, "nameEnglish", "categoryId", "createdAt", "updatedAt")
@@ -248,17 +259,46 @@ func (s *Scraper) getCategoryIDByName(ctx context.Context, categoryName string) 
 	return id, nil
 }
 
+// categoryItem holds both external and internal IDs for queue processing
+type categoryItem struct {
+	ExternalID int
+	InternalID string
+}
+
 func (s *Scraper) scrapeProducts(ctx context.Context, categoryMap map[int]string) (map[int]string, error) {
 	logger.Info("fetching products")
 
 	// Map external product ID to internal UUID
 	productMap := make(map[int]string)
 
-	// Fetch products for each category
-	for extCategoryID, categoryID := range categoryMap {
+	// Build initial queue from categoryMap
+	queue := make([]WorkItem[categoryItem], 0, len(categoryMap))
+	for extID, intID := range categoryMap {
+		queue = append(queue, WorkItem[categoryItem]{
+			Data: categoryItem{ExternalID: extID, InternalID: intID},
+		})
+	}
+
+	var failedCategories []int
+
+	// Process queue with deferred retries
+	for len(queue) > 0 {
+		item := queue[0]
+		queue = queue[1:]
+
+		extCategoryID := item.Data.ExternalID
+		categoryID := item.Data.InternalID
+
 		products, err := s.fetchProducts(extCategoryID)
 		if err != nil {
-			logger.Error("error fetching products for category", "categoryID", extCategoryID, "error", err)
+			if item.Retries < maxRetries {
+				item.Retries++
+				queue = append(queue, item) // back of the line
+				logger.Warn("retrying category fetch", "categoryID", extCategoryID, "attempt", item.Retries)
+			} else {
+				logger.Error("failed to fetch products for category after retries", "categoryID", extCategoryID, "error", err)
+				failedCategories = append(failedCategories, extCategoryID)
+			}
 			continue
 		}
 
@@ -282,17 +322,50 @@ func (s *Scraper) scrapeProducts(ctx context.Context, categoryMap map[int]string
 		}
 	}
 
+	if len(failedCategories) > 0 {
+		logger.Warn("some categories failed after all retries", "count", len(failedCategories), "categoryIDs", failedCategories)
+	}
+
 	logger.Info("scraped unique products", "count", len(productMap))
 	return productMap, nil
 }
 
+// --- Region Methods ---
+
+func (s *Scraper) fetchRegions() ([]ekalathiapi.RegionResponse, error) {
+	req, err := ekalathiapi.GetRegions(ekalathiapi.RegionRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create regions request: %w", err)
+	}
+
+	req = s.updateHeaders(req)
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch regions: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var regions []ekalathiapi.RegionResponse
+	if err := json.NewDecoder(resp.Body).Decode(&regions); err != nil {
+		return nil, fmt.Errorf("failed to parse regions: %w", err)
+	}
+
+	return regions, nil
+}
+
 // --- Store Methods ---
 
-func (s *Scraper) fetchRetailBranchesPage(productID, page int) ([]ekalathiapi.RetailBranchResponse, bool, error) {
+func (s *Scraper) fetchRetailBranchesPage(productID, regionID, page int) ([]ekalathiapi.RetailBranchResponse, bool, error) {
 	req, err := ekalathiapi.GetBranches(ekalathiapi.RetailBranchRequest{
 		Page:      page,
 		Size:      10,
 		ProductId: productID,
+		RegionIds: []int{regionID},
 	})
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to create branches request: %w", err)
@@ -314,7 +387,6 @@ func (s *Scraper) fetchRetailBranchesPage(productID, page int) ([]ekalathiapi.Re
 	// Read full body first to handle large responses
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		//TODO: add retry logic for transient errors
 		return nil, false, fmt.Errorf("failed to read branches response body: %w", err)
 	}
 
@@ -326,12 +398,12 @@ func (s *Scraper) fetchRetailBranchesPage(productID, page int) ([]ekalathiapi.Re
 	return result.Content, result.Last, nil
 }
 
-func (s *Scraper) fetchRetailBranches(productID int) ([]ekalathiapi.RetailBranchResponse, error) {
+func (s *Scraper) fetchRetailBranches(productID, regionID int) ([]ekalathiapi.RetailBranchResponse, error) {
 	var allBranches []ekalathiapi.RetailBranchResponse
 	page := 0
 
 	for {
-		branches, isLast, err := s.fetchRetailBranchesPage(productID, page)
+		branches, isLast, err := s.fetchRetailBranchesPage(productID, regionID, page)
 		if err != nil {
 			return nil, err
 		}
@@ -349,20 +421,21 @@ func (s *Scraper) fetchRetailBranches(productID int) ([]ekalathiapi.RetailBranch
 	return allBranches, nil
 }
 
-func (s *Scraper) upsertStore(ctx context.Context, externalID int, name, chain, location string) (string, error) {
+func (s *Scraper) upsertStore(ctx context.Context, externalID int, name, chain, district, location string) (string, error) {
 	var id string
-	now := time.Now()
+	now := time.Now().UTC()
 
 	err := s.db.QueryRow(ctx, `
-		INSERT INTO "Store" (id, "externalId", name, chain, location, "createdAt", "updatedAt")
-		VALUES ($1, $2, $3, $4, $5, $6, $6)
+		INSERT INTO "Store" (id, "externalId", name, chain, district, location, "createdAt", "updatedAt")
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
 		ON CONFLICT ("externalId") DO UPDATE SET
 			name = EXCLUDED.name,
 			chain = EXCLUDED.chain,
+			district = COALESCE(EXCLUDED.district, "Store".district),
 			location = EXCLUDED.location,
 			"updatedAt" = EXCLUDED."updatedAt"
 		RETURNING id
-	`, uuid.New().String(), externalID, name, chain, location, now).Scan(&id)
+	`, uuid.New().String(), externalID, name, chain, district, location, now).Scan(&id)
 
 	if err != nil {
 		return "", fmt.Errorf("failed to upsert store: %w", err)
@@ -375,7 +448,7 @@ func (s *Scraper) insertPrice(ctx context.Context, productID, storeID string, pr
 	_, err := s.db.Exec(ctx, `
 		INSERT INTO "Price" (id, "productId", "storeId", price, "scrapedAt")
 		VALUES ($1, $2, $3, $4, $5)
-	`, uuid.New().String(), productID, storeID, price, time.Now())
+	`, uuid.New().String(), productID, storeID, price, time.Now().UTC())
 
 	if err != nil {
 		return fmt.Errorf("failed to insert price: %w", err)
@@ -384,16 +457,52 @@ func (s *Scraper) insertPrice(ctx context.Context, productID, storeID string, pr
 	return nil
 }
 
-func (s *Scraper) scrapePrices(ctx context.Context, productMap map[int]string) error {
-	logger.Info("fetching prices from retail branches")
+// productRegionItem holds product and region info for queue processing
+type productRegionItem struct {
+	ProductExtID int
+	ProductIntID string
+	RegionID     int
+	RegionName   string
+}
+
+func (s *Scraper) scrapePrices(ctx context.Context, productMap map[int]string, regions []ekalathiapi.RegionResponse) error {
+	logger.Info("fetching prices from retail branches", "productCount", len(productMap), "regionCount", len(regions))
 
 	storeMap := make(map[int]string) // cache store IDs
 	priceCount := 0
 
-	for extProductID, productID := range productMap {
-		branches, err := s.fetchRetailBranches(extProductID)
+	// Build initial queue: each product x each region
+	queue := make([]WorkItem[productRegionItem], 0, len(productMap)*len(regions))
+	for extID, intID := range productMap {
+		for _, region := range regions {
+			queue = append(queue, WorkItem[productRegionItem]{
+				Data: productRegionItem{
+					ProductExtID: extID,
+					ProductIntID: intID,
+					RegionID:     region.ID,
+					RegionName:   region.Name,
+				},
+			})
+		}
+	}
+
+	var failedItems []productRegionItem
+
+	// Process queue with deferred retries
+	for len(queue) > 0 {
+		item := queue[0]
+		queue = queue[1:]
+
+		branches, err := s.fetchRetailBranches(item.Data.ProductExtID, item.Data.RegionID)
 		if err != nil {
-			logger.Error("error fetching branches for product", "productID", extProductID, "error", err)
+			if item.Retries < maxRetries {
+				item.Retries++
+				queue = append(queue, item) // back of the line
+				logger.Warn("retrying branch fetch", "productID", item.Data.ProductExtID, "regionID", item.Data.RegionID, "attempt", item.Retries)
+			} else {
+				logger.Error("failed to fetch branches after retries", "productID", item.Data.ProductExtID, "regionID", item.Data.RegionID, "error", err)
+				failedItems = append(failedItems, item.Data)
+			}
 			continue
 		}
 
@@ -406,7 +515,7 @@ func (s *Scraper) scrapePrices(ctx context.Context, productMap map[int]string) e
 					location = fmt.Sprintf("%s (%s, %s)", branch.PostalAddress, branch.BranchLatitude, branch.BranchLongitude)
 				}
 
-				storeID, err = s.upsertStore(ctx, branch.ID, branch.Name, branch.CompanyName, location)
+				storeID, err = s.upsertStore(ctx, branch.ID, branch.Name, branch.CompanyName, item.Data.RegionName, location)
 				if err != nil {
 					logger.Error("error upserting store", "storeID", branch.ID, "error", err)
 					continue
@@ -415,17 +524,24 @@ func (s *Scraper) scrapePrices(ctx context.Context, productMap map[int]string) e
 			}
 
 			// Insert price record
-			if err := s.insertPrice(ctx, productID, storeID, branch.RetailerProductPrice); err != nil {
-				logger.Error("error inserting price", "productID", extProductID, "storeID", branch.ID, "error", err)
+			if err := s.insertPrice(ctx, item.Data.ProductIntID, storeID, branch.RetailerProductPrice); err != nil {
+				logger.Error("error inserting price", "productID", item.Data.ProductExtID, "storeID", branch.ID, "error", err)
 				continue
 			}
 			priceCount++
 		}
 
 		// Rate limiting to be respectful to the API
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 	}
 
+	if len(failedItems) > 0 {
+		logger.Warn("some product-region combinations failed after all retries", "count", len(failedItems))
+		s.metrics.RecordCount("failed_items", len(failedItems), map[string]string{"phase": "prices"})
+	}
+
+	s.metrics.RecordCount("prices", priceCount, nil)
+	s.metrics.RecordCount("stores", len(storeMap), nil)
 	logger.Info("inserted price records", "priceCount", priceCount, "storeCount", len(storeMap))
 	return nil
 }
@@ -435,22 +551,40 @@ func (s *Scraper) scrapePrices(ctx context.Context, productMap map[int]string) e
 func (s *Scraper) Run(ctx context.Context) error {
 	logger.Info("starting scraper")
 
-	// Step 1: Scrape categories
+	// Step 1: Fetch regions (districts)
+	startRegions := time.Now()
+	regions, err := s.fetchRegions()
+	if err != nil {
+		return fmt.Errorf("failed to fetch regions: %w", err)
+	}
+	s.metrics.RecordDuration("regions", time.Since(startRegions), nil)
+	s.metrics.RecordCount("regions", len(regions), nil)
+	logger.Info("fetched regions", "count", len(regions))
+
+	// Step 2: Scrape categories
+	startCategories := time.Now()
 	categoryMap, err := s.scrapeCategories(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to scrape categories: %w", err)
 	}
+	s.metrics.RecordDuration("categories", time.Since(startCategories), nil)
+	s.metrics.RecordCount("categories", len(categoryMap), nil)
 
-	// Step 2: Scrape products
+	// Step 3: Scrape products
+	startProducts := time.Now()
 	productMap, err := s.scrapeProducts(ctx, categoryMap)
 	if err != nil {
 		return fmt.Errorf("failed to scrape products: %w", err)
 	}
+	s.metrics.RecordDuration("products", time.Since(startProducts), nil)
+	s.metrics.RecordCount("products", len(productMap), nil)
 
-	// Step 3: Scrape prices from retail branches
-	if err := s.scrapePrices(ctx, productMap); err != nil {
+	// Step 4: Scrape prices from retail branches (per region)
+	startPrices := time.Now()
+	if err := s.scrapePrices(ctx, productMap, regions); err != nil {
 		return fmt.Errorf("failed to scrape prices: %w", err)
 	}
+	s.metrics.RecordDuration("prices", time.Since(startPrices), nil)
 
 	logger.Info("scraping completed successfully")
 	return nil

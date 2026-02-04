@@ -10,7 +10,28 @@ Next.js 14 API server for Cyprus Price Watchdog.
 ## Environment
 
 ```bash
-export DATABASE_URL="postgresql://scraper_user:scraper_password@localhost:5432/scraper_db"
+export DATABASE_URL="postgresql://data_reader:data_reader_pass@localhost:5432/scraper_db"
+```
+
+Note: The server uses `data_reader` (read-only) since it only queries data.
+
+## Development
+
+### With Docker Compose (recommended)
+
+From the project root:
+
+```bash
+docker compose up
+```
+
+The server runs on http://localhost:3000 with hot reloading enabled. Changes to `src/` are reflected immediately.
+
+### Standalone
+
+```bash
+make install
+make dev
 ```
 
 ## Commands
@@ -23,7 +44,13 @@ export DATABASE_URL="postgresql://scraper_user:scraper_password@localhost:5432/s
 | `make start` | Start production server |
 | `make lint` | Run ESLint |
 | `make typecheck` | Run TypeScript type checking |
-| `make image` | Build Docker image |
+
+## Docker
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile` | Production build (standalone Next.js) |
+| `Dockerfile.dev` | Development with hot reloading |
 
 ## API Endpoints
 
@@ -37,6 +64,25 @@ export DATABASE_URL="postgresql://scraper_user:scraper_password@localhost:5432/s
 | `/api/products/:id/prices` | GET | Get price history |
 | `/api/stores` | GET | List stores |
 | `/api/stats` | GET | Get statistics |
+| `/api/metrics` | GET | Server metrics (for Telegraf) |
+
+## Metrics Endpoint
+
+The `/api/metrics` endpoint exposes server metrics for Telegraf to scrape:
+
+```json
+{
+  "memory_heap_used": 12345678,
+  "memory_heap_total": 23456789,
+  "memory_rss": 34567890,
+  "uptime_seconds": 3600,
+  "requests_total": 1000,
+  "requests_2xx": 950,
+  "requests_4xx": 40,
+  "requests_5xx": 10,
+  "timestamp": 1234567890
+}
+```
 
 ## Response Format
 

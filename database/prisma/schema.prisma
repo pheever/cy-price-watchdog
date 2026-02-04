@@ -45,12 +45,14 @@ model Store {
   name        String
   nameEnglish String?
   chain       String?
+  district    String?
   location    String?
   prices      Price[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([chain])
+  @@index([district])
 }
 
 model Price {

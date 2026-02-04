@@ -1,6 +1,7 @@
 :root {
   --color-primary: #2563eb;
   --color-primary-dark: #1d4ed8;
+  --color-primary-light: rgba(37, 99, 235, 0.1);
   --color-secondary: #64748b;
   --color-success: #22c55e;
   --color-warning: #f59e0b;
@@ -9,7 +10,7 @@
   --color-surface: #ffffff;
   --color-text: #0f172a;
   --color-text-muted: #64748b;
-  --color-border: #e2e8f0;
+  --color-border: #e5e7eb;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -23,10 +24,14 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text);
   line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
 }
 
 a {
@@ -47,8 +52,96 @@ a:hover {
 .card {
   background: var(--color-surface);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   padding: 1.5rem;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-card .icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  flex-shrink: 0;
+}
+
+.stat-card .icon-wrapper i {
+  font-size: 1.25rem;
+  color: var(--color-primary);
+}
+
+.stat-card .stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stat-card .stat-label {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.stat-card .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-primary);
+}
+
+.stat-card .stat-value.empty {
+  color: var(--color-text-muted);
+}
+
+/* Search input */
+.search-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.search-wrapper i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+}
+
+.search-wrapper .input {
+  padding-left: 2.75rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+/* Badge/Pill */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.badge i {
+  font-size: 0.625rem;
 }
 
 .btn {
@@ -124,4 +217,207 @@ a:hover {
   padding: 1rem;
   background: #fef2f2;
   border-radius: var(--radius);
+}
+
+/* Data Table */
+.data-table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.data-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+  z-index: 10;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.data-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.data-table th.sortable:hover {
+  color: var(--color-primary);
+}
+
+.data-table th .sort-icon {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.data-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: var(--color-bg);
+}
+
+.data-table tbody tr:hover {
+  background: var(--color-primary-light);
+}
+
+.data-table .price-cell {
+  font-weight: 700;
+  font-size: 1.125rem;
+  white-space: nowrap;
+}
+
+.data-table .price-lowest {
+  color: var(--color-success);
+}
+
+.data-table .price-highest {
+  color: var(--color-error);
+}
+
+/* Price change indicators */
+.price-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.price-change.up {
+  color: var(--color-error);
+}
+
+.price-change.down {
+  color: var(--color-success);
+}
+
+/* Back to Top Button */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s, opacity 0.2s;
+  z-index: 100;
+}
+
+.back-to-top:hover {
+  transform: scale(1.1);
+}
+
+.back-to-top.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Load More Button */
+.load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+/* Mobile Store Cards */
+.store-cards-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .data-table-wrapper {
+    display: none;
+  }
+
+  .store-cards-mobile {
+    display: block;
+  }
+}
+
+.store-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.store-card.lowest {
+  border-color: var(--color-success);
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.store-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.store-card-name {
+  font-weight: 600;
+}
+
+.store-card-chain {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.store-card-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.store-card-price.lowest {
+  color: var(--color-success);
+}
+
+.store-card-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+/* Button variants */
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background: var(--color-bg);
+}
+
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
 }

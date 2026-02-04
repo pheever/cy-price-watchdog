@@ -1,12 +1,67 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { api } from '../lib/api';
+import { useLanguage } from '../contexts/LanguageContext';
+
+function formatDate(dateString: string, language: string): string {
+  return new Date(dateString).toLocaleString(language === 'el' ? 'el-GR' : 'en-GB', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+interface StatCardProps {
+  icon: string;
+  label: string;
+  value: number;
+  to?: string;
+}
+
+function StatCard({ icon, label, value, to }: StatCardProps) {
+  const content = (
+    <>
+      <div className="icon-wrapper">
+        <i className={`fa-solid ${icon}`}></i>
+      </div>
+      <div className="stat-content">
+        <span className="stat-label">{label}</span>
+        <span className={`stat-value ${value === 0 ? 'empty' : ''}`}>
+          {value.toLocaleString()}
+        </span>
+      </div>
+    </>
+  );
+
+  if (to) {
+    return (
+      <Link to={to} className="card stat-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className="card stat-card">{content}</div>;
+}
 
 export default function Dashboard() {
+  const { language, t } = useLanguage();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
   const { data: stats, loading, error } = useApi(() => api.getStats(), []);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/categories?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return <div className="loading">{t('common.loading')}</div>;
   }
 
   if (error) {
@@ -14,73 +69,73 @@ export default function Dashboard() {
   }
 
   if (!stats) {
-    return <div className="error">No data available</div>;
+    return <div className="error">{t('common.noData')}</div>;
   }
 
   return (
     <div>
-      <h1 style={{ marginBottom: '1.5rem' }}>Dashboard</h1>
-
-      <div className="grid grid-4" style={{ marginBottom: '2rem' }}>
-        <div className="card">
-          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Categories</div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.counts.categories}</div>
-        </div>
-        <div className="card">
-          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Products</div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.counts.products}</div>
-        </div>
-        <div className="card">
-          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Stores</div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.counts.stores}</div>
-        </div>
-        <div className="card">
-          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Price Records</div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.counts.priceRecords.toLocaleString()}</div>
+      {/* Header with Last Scraped Badge */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+        <div className="badge">
+          <i className="fa-solid fa-circle" style={{ color: stats.lastScrapedAt ? 'var(--color-success)' : 'var(--color-text-muted)' }}></i>
+          <span>{t('dashboard.lastScraped')}</span>
+          <strong>{stats.lastScrapedAt ? formatDate(stats.lastScrapedAt, language) : t('dashboard.never')}</strong>
         </div>
       </div>
 
-      <div className="grid grid-2">
-        <div className="card">
-          <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Price Statistics</h2>
-          <dl style={{ display: 'grid', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <dt style={{ color: 'var(--color-text-muted)' }}>Average Price</dt>
-              <dd style={{ fontWeight: 500 }}>
-                {stats.priceRange.avg ? `€${parseFloat(stats.priceRange.avg).toFixed(2)}` : 'N/A'}
-              </dd>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <dt style={{ color: 'var(--color-text-muted)' }}>Min Price</dt>
-              <dd style={{ fontWeight: 500 }}>
-                {stats.priceRange.min ? `€${parseFloat(stats.priceRange.min).toFixed(2)}` : 'N/A'}
-              </dd>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <dt style={{ color: 'var(--color-text-muted)' }}>Max Price</dt>
-              <dd style={{ fontWeight: 500 }}>
-                {stats.priceRange.max ? `€${parseFloat(stats.priceRange.max).toFixed(2)}` : 'N/A'}
-              </dd>
-            </div>
-          </dl>
+      {/* Search Bar */}
+      <form onSubmit={handleSearch} style={{ marginBottom: '2rem' }}>
+        <div className="search-wrapper">
+          <i className="fa-solid fa-magnifying-glass"></i>
+          <input
+            type="text"
+            className="input"
+            placeholder={t('dashboard.searchPlaceholder')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
+      </form>
 
-        <div className="card">
-          <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Data Freshness</h2>
-          <p style={{ color: 'var(--color-text-muted)' }}>
-            Last scraped:{' '}
-            {stats.lastScrapedAt
-              ? new Date(stats.lastScrapedAt).toLocaleString()
-              : 'Never'}
-          </p>
-          <Link
-            to="/categories"
-            className="btn btn-primary"
-            style={{ marginTop: '1rem', display: 'inline-block' }}
-          >
-            Browse Categories
-          </Link>
-        </div>
+      {/* Stats Cards */}
+      <div className="grid grid-4" style={{ marginBottom: '2rem' }}>
+        <StatCard
+          icon="fa-layer-group"
+          label={t('dashboard.categories')}
+          value={stats.counts.categories}
+          to="/categories"
+        />
+        <StatCard
+          icon="fa-box-open"
+          label={t('dashboard.products')}
+          value={stats.counts.products}
+          to="/categories"
+        />
+        <StatCard
+          icon="fa-store"
+          label={t('dashboard.stores')}
+          value={stats.counts.stores}
+        />
+        <StatCard
+          icon="fa-tags"
+          label={t('dashboard.priceRecords')}
+          value={stats.counts.priceRecords}
+        />
+      </div>
+
+      {/* Quick Browse */}
+      <div className="card">
+        <p style={{ marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
+          {t('dashboard.browse')}
+        </p>
+        <Link
+          to="/categories"
+          className="btn btn-primary"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <i className="fa-solid fa-arrow-right"></i>
+          {t('dashboard.browseCategories')}
+        </Link>
       </div>
     </div>
   );

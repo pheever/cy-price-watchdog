@@ -4,59 +4,106 @@ services:
     container_name: postgres
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=scraper_user
-      - POSTGRES_PASSWORD=scraper_password
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin_password
       - POSTGRES_DB=scraper_db
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
     ports:
       - "5432:5432"
+    networks:
+      - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U scraper_user -d scraper_db"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d scraper_db"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    networks:
+      - app-network
+    depends_on:
+      - database
+
   migrate:
-    image: migrate/migrate
+    image: node:22-alpine
     container_name: migrate
+    working_dir: /app
     volumes:
-      - ./database/migrations:/migrations
-    command:
-      [
-        "-path", "/migrations",
-        "-database", "postgres://scraper_user:scraper_password@database:5432/scraper_db?sslmode=disable",
-        "up"
-      ]
+      - ./database:/app
+    networks:
+      - app-network
+    command: >
+      sh -c "apk add --no-cache postgresql-client &&
+             yarn install --frozen-lockfile &&
+             DATABASE_URL=postgresql://admin:admin_password@database:5432/scraper_db yarn prisma migrate deploy &&
+             PGPASSWORD=admin_password psql -h database -U admin -d scraper_db -f /app/init/001_users.sql"
+    restart: "no"
     depends_on:
       database:
+        condition: service_healthy
+
+  metrics-migrate:
+    image: postgres:15
+    container_name: metrics-migrate
+    volumes:
+      - ./metrics/schema:/scripts:ro
+    networks:
+      - app-network
+    environment:
+      - PGPASSWORD=metrics_password
+    
+    command: >
+      sh -c "for f in /scripts/*.sql; do
+               echo \"Running $$f...\";
+               psql -h timescaledb -U metrics_user -d metrics_db -f $$f;
+             done"
+    restart: "no"
+    depends_on:
+      timescaledb:
         condition: service_healthy
 
   server:
     build:
       context: .
-      dockerfile: server/Dockerfile
-      args:
-        DATABASE_URL: postgresql://user:pass@localhost:5432/db
+      dockerfile: server/Dockerfile.dev
     container_name: server
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql://scraper_user:scraper_password@database:5432/scraper_db
-      - NODE_ENV=production
+      - DATABASE_URL=postgresql://data_reader:data_reader_pass@database:5432/scraper_db
+      - NODE_ENV=development
     ports:
       - "3000:3000"
+    networks:
+      - app-network
+    volumes:
+      - ./server/src:/app/src
+      - ./server/public:/app/public
+      - ./server/next.config.js:/app/next.config.js
+      - ./server/tsconfig.json:/app/tsconfig.json
+      - ./database/prisma:/app/prisma:ro
     depends_on:
       migrate:
         condition: service_completed_successfully
     develop:
       watch:
+        - action: sync
+          path: ./server/src
+          target: /app/src
+        - action: sync
+          path: ./server/public
+          target: /app/public
         - action: rebuild
-          path: ./server
-          ignore:
-            - ./server/node_modules/
-            - ./server/.next/
-        - action: rebuild
-          path: ./database/prisma
+          path: ./server/package.json
+        - action: sync+restart
+          path: ./database/prisma/schema.prisma
+          target: /app/prisma/schema.prisma
 
   scraper:
     build:
@@ -66,9 +113,14 @@ services:
     restart: "no"
     environment:
       - TZ=Europe/Athens
-      - DATABASE_URL=postgresql://scraper_user:scraper_password@database:5432/scraper_db
+      - DATABASE_URL=postgresql://data_writer:data_writer_pass@database:5432/scraper_db
+      - METRICS_URL=http://telegraf:8186/write
+    networks:
+      - app-network
     depends_on:
-      server:
+      migrate:
+        condition: service_started
+      telegraf:
         condition: service_started
     develop:
       watch:
@@ -80,19 +132,105 @@ services:
   web:
     build:
       context: ./web
+      dockerfile: Dockerfile.dev
     container_name: web
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "8080:5173"
+    networks:
+      - app-network
+    environment:
+      - VITE_API_URL=http://server:3000
+    volumes:
+      - ./web/src:/app/src
+      - ./web/public:/app/public
+      - ./web/index.html:/app/index.html
+      - ./web/vite.config.ts:/app/vite.config.ts
+      - ./web/tsconfig.json:/app/tsconfig.json
     depends_on:
       - server
     develop:
       watch:
+        - action: sync
+          path: ./web/src
+          target: /app/src
+        - action: sync
+          path: ./web/index.html
+          target: /app/index.html
         - action: rebuild
-          path: ./web
-          ignore:
-            - web/node_modules/
-            - web/dist/
+          path: ./web/package.json
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: timescaledb
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=metrics_user
+      - POSTGRES_PASSWORD=metrics_password
+      - POSTGRES_DB=metrics_db
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ./metrics/schema:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5433:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metrics_user -d metrics_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      database:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./metrics/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./metrics/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3001:3000"
+    networks:
+      - app-network
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      metrics-migrate:
+        condition: service_completed_successfully
+
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    restart: unless-stopped
+    volumes:
+      - ./metrics/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - telegraf_logs:/var/log/telegraf
+    ports:
+      - "8186:8186"
+    networks:
+      - app-network
+    depends_on:
+      metrics-migrate:
+        condition: service_completed_successfully
+      web:
+        condition: service_started
+      server:
+        condition: service_started
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   pgdata:
+  timescaledb_data:
+  grafana_data:
+  telegraf_logs:

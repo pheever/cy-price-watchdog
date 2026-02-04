@@ -1,6 +1,55 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { api, type Category, type Product } from '../lib/api';
+import { useLanguage } from '../contexts/LanguageContext';
+
+function SearchResults({ query }: { query: string }) {
+  const { t } = useLanguage();
+  const { data: products, loading, error } = useApi(
+    () => api.getProducts({ search: query, limit: 50 }),
+    [query]
+  );
+
+  if (loading) {
+    return <div className="loading">{t('common.loading')}</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
+  return (
+    <div>
+      <nav style={{ marginBottom: '1rem', fontSize: '0.875rem' }}>
+        <Link to="/categories">{t('categories.allCategories')}</Link>
+        {' / '}
+        <span style={{ color: 'var(--color-text-muted)' }}>Search: "{query}"</span>
+      </nav>
+
+      <h1 style={{ marginBottom: '1.5rem' }}>
+        {products?.length || 0} results for "{query}"
+      </h1>
+
+      {products && products.length > 0 ? (
+        <div className="grid grid-2">
+          {products.map((product: Product) => (
+            <Link key={product.id} to={`/products/${product.id}`} className="card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+              <div style={{ fontWeight: 500 }}>{product.nameEnglish}</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{product.name}</div>
+              {product.unit && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-secondary)', marginTop: '0.25rem' }}>
+                  {product.unit}
+                </div>
+              )}
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <p style={{ color: 'var(--color-text-muted)' }}>{t('common.noData')}</p>
+      )}
+    </div>
+  );
+}
 
 function CategoryDetail({ id }: { id: string }) {
   const { data: category, loading, error } = useApi(
@@ -108,6 +157,12 @@ function CategoryList() {
 
 export default function Categories() {
   const { id } = useParams<{ id?: string }>();
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search');
+
+  if (searchQuery) {
+    return <SearchResults query={searchQuery} />;
+  }
 
   if (id) {
     return <CategoryDetail id={id} />;

@@ -7,9 +7,12 @@ resource "cloudflare_pages_project" "web" {
     type = "github"
 
     config {
-      owner             = split("/", local.github_repo)[0]
-      repo_name         = split("/", local.github_repo)[1]
-      production_branch = "main"
+      owner                         = split("/", local.github_repo)[0]
+      repo_name                     = split("/", local.github_repo)[1]
+      production_branch             = "main"
+      deployments_enabled           = true
+      production_deployment_enabled = true
+      preview_deployment_setting    = "none"
     }
   }
 

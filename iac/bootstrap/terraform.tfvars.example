@@ -1,12 +1,14 @@
 # Required
 project_id            = "cy-price-watchdog-prod"  # TF_VAR_project_id
 billing_account       = "XXXXXX-XXXXXX-XXXXXX"    # TF_VAR_billing_account
-github_token          = ""                         # TF_VAR_github_token          — PAT with repo admin scope
-cloudflare_api_token  = ""                         # TF_VAR_cloudflare_api_token  — token with API Tokens Write
+github_token          = ""                         # TF_VAR_github_token          — PAT with repo admin scope, or $(gh auth token)
+ghcr_token            = ""                         # TF_VAR_ghcr_token            — classic PAT with read:packages scope
+cloudflare_api_key    = ""                         # TF_VAR_cloudflare_api_key    — Global API Key from CF dashboard
+cloudflare_email      = ""                         # TF_VAR_cloudflare_email      — Cloudflare account email
 cloudflare_account_id = ""                         # TF_VAR_cloudflare_account_id
 
 # Optional (defaults shown)
-# project_name  = "Cyprus Price Watchdog"       # TF_VAR_project_name
+# project_name  = "Cyprus Price Watchdog"        # TF_VAR_project_name
 # org_id        = ""                             # TF_VAR_org_id          — mutually exclusive with folder_id
 # folder_id     = "123456789"                    # TF_VAR_folder_id       — mutually exclusive with org_id
 # region        = "europe-west1"                 # TF_VAR_region

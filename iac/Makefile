@@ -1,19 +1,9 @@
-.PHONY: init plan apply destroy fmt validate
-
-init:
-	terraform init
-
-plan:
-	terraform plan
-
-apply:
-	terraform apply
-
-destroy:
-	terraform destroy
+.PHONY: fmt validate
 
 fmt:
-	terraform fmt -recursive
+	terraform -chdir=bootstrap fmt -recursive
+	terraform -chdir=main fmt -recursive
 
 validate:
-	terraform validate
+	terraform -chdir=bootstrap validate
+	terraform -chdir=main validate

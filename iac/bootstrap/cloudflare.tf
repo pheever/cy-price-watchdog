@@ -16,6 +16,7 @@ resource "cloudflare_api_token" "terraform" {
   policy {
     permission_groups = [
       data.cloudflare_api_token_permission_groups.all.account["Cloudflare Tunnel Write"],
+      data.cloudflare_api_token_permission_groups.all.account["Pages Write"],
     ]
     resources = {
       "com.cloudflare.api.account.${var.cloudflare_account_id}" = "*"

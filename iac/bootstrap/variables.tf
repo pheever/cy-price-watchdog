@@ -44,10 +44,21 @@ variable "github_token" {
   sensitive   = true
 }
 
-variable "cloudflare_api_token" {
-  description = "Cloudflare API token with API Tokens Write permission"
+variable "ghcr_token" {
+  description = "GitHub classic PAT with read:packages scope (for pulling images from ghcr.io)"
   type        = string
   sensitive   = true
+}
+
+variable "cloudflare_api_key" {
+  description = "Cloudflare Global API Key (Profile > API Tokens > Global API Key)"
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_email" {
+  description = "Cloudflare account email"
+  type        = string
 }
 
 variable "cloudflare_account_id" {

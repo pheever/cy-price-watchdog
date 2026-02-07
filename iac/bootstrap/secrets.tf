@@ -9,7 +9,9 @@ locals {
     "grafana-admin-password",
     "cloudflare-api-token",
     "cloudflare-tunnel-secret",
+    "ghcr-token",
   ])
+
 }
 
 resource "google_secret_manager_secret" "secrets" {
@@ -22,4 +24,9 @@ resource "google_secret_manager_secret" "secrets" {
   }
 
   depends_on = [google_project_service.services]
+}
+
+resource "google_secret_manager_secret_version" "ghcr_token" {
+  secret      = google_secret_manager_secret.secrets["ghcr-token"].id
+  secret_data = var.ghcr_token
 }

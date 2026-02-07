@@ -1,0 +1,17 @@
+output "vm_name" {
+  description = "Name of the GCE VM"
+  value       = google_compute_instance.vm.name
+  sensitive   = true
+}
+
+output "vm_internal_ip" {
+  description = "Internal IP of the VM"
+  value       = google_compute_instance.vm.network_interface[0].network_ip
+  sensitive   = true
+}
+
+output "scraper_job_name" {
+  description = "Cloud Run scraper job name"
+  value       = google_cloud_run_v2_job.scraper.name
+  sensitive   = true
+}

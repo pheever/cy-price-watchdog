@@ -1,13 +1,3 @@
-resource "random_password" "data_writer_password" {
-  length  = 32
-  special = false
-}
-
-resource "google_secret_manager_secret_version" "data_writer_password" {
-  secret      = "projects/${local.project_id}/secrets/data-writer-password"
-  secret_data = random_password.data_writer_password.result
-}
-
 data "google_project" "this" {
   project_id = local.project_id
 }

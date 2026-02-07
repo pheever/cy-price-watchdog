@@ -57,6 +57,39 @@ This starts:
 | `make migrate` | Run database migrations |
 | `make generate` | Regenerate Prisma client |
 | `make rebuild` | Rebuild service (`SERVICE=api make rebuild`) |
+| `make version SERVICE=api` | Show current version of a service |
+| `make release SERVICE=api BUMP=patch` | Tag and push a new release |
+
+### Versioning and Releases
+
+Each service is versioned independently using git tags with the convention `<service>/v<semver>` (e.g. `api/v1.2.3`).
+
+```bash
+# Show current version
+make version SERVICE=api
+
+# Create a new release (bumps patch by default)
+make release SERVICE=api
+make release SERVICE=api BUMP=minor
+make release SERVICE=api BUMP=major
+```
+
+Pushing a tag triggers the [release workflow](.github/workflows/release.yml), which builds and pushes the Docker image to GitHub Container Registry:
+
+```text
+ghcr.io/pheever/cy-price-watchdog/api:1.2.3
+ghcr.io/pheever/cy-price-watchdog/api:latest
+```
+
+### Conventional Commits
+
+This repo enforces [Conventional Commits](https://www.conventionalcommits.org/) via commitlint and husky. Commit messages must follow the format:
+
+```text
+<type>[optional scope]: <description>
+```
+
+Examples: `feat: add price alerts`, `fix(scraper): handle timeout`, `docs: update README`.
 
 ## Project Structure
 

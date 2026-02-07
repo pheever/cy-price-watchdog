@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*/v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse tag
+        id: meta
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          SERVICE="${TAG%%/*}"
+          VERSION="${TAG#*/v}"
+
+          if [[ ! "$SERVICE" =~ ^(api|scraper|web)$ ]]; then
+            echo "::error::Unknown service: $SERVICE"
+            exit 1
+          fi
+
+          echo "service=$SERVICE" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          if [ "$SERVICE" = "api" ]; then
+            echo "context=." >> "$GITHUB_OUTPUT"
+          else
+            echo "context=$SERVICE" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ steps.meta.outputs.context }}
+          file: ${{ steps.meta.outputs.service }}/Dockerfile
+          push: true
+          build-args: |
+            ${{ steps.meta.outputs.service == 'api' && format('DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy') || '' }}
+          tags: |
+            ghcr.io/pheever/cy-price-watchdog/${{ steps.meta.outputs.service }}:${{ steps.meta.outputs.version }}
+            ghcr.io/pheever/cy-price-watchdog/${{ steps.meta.outputs.service }}:latest

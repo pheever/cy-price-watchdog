@@ -1,0 +1,10 @@
+# Required
+domain = "pricewatchdog.cy"
+
+# Optional (defaults shown)
+# zone               = "europe-west1-b"
+# image_tag          = "latest"
+# vm_machine_type    = "e2-small"
+# vm_disk_size_gb    = 30
+# subnet_cidr        = "10.0.0.0/24"
+# vpc_connector_cidr = "10.8.0.0/28"

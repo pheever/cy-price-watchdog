@@ -22,10 +22,13 @@ One-time Terraform module that creates the GCP foundation required by the main `
 
 - Terraform >= 1.0
 - Google Cloud SDK (`gcloud`) authenticated with org/folder admin permissions
-- A GCP billing account ID
-- A GitHub Personal Access Token (PAT) with `repo` and `admin:repo` scopes
-- A Cloudflare API token with **API Tokens Write** permission (used to create a scoped token)
-- Your Cloudflare account ID
+- A GCP billing account ID — find it in the [Cloud Console](https://console.cloud.google.com/billing) or via `gcloud billing accounts list`
+- A GitHub fine-grained Personal Access Token (PAT) with these repository permissions:
+  - **Secrets** — Read and Write
+  - **Variables** — Read and Write
+  - Set an expiration date (e.g. 7 days) — the token is only needed during bootstrap
+- A Cloudflare API token — create one in [API Tokens](https://dash.cloudflare.com/profile/api-tokens) using the **Create Custom Token** template with **API Tokens Write** permission (this bootstrap token creates a scoped token for the main module). Set a short TTL since it's only needed during bootstrap
+- Your Cloudflare account ID — visible in the [dashboard](https://dash.cloudflare.com) sidebar or on any zone's overview page
 
 ## Setup
 

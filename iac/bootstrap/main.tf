@@ -14,6 +14,12 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 4.0"
     }
+
+
+  }
+  backend "gcs" {
+    bucket = "cy-price-watchdog-prod-tfstate"
+    prefix = "bootstrap"
   }
 }
 

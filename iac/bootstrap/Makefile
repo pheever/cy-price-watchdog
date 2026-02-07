@@ -25,3 +25,9 @@ validate:
 
 output:
 	terraform output
+
+test-cf-auth:
+	curl -s -H "Authorization: Bearer $(TF_VAR_cloudflare_api_token)" \
+    https://api.cloudflare.com/client/v4/user/tokens/verify | jq .
+	curl -s -H "Authorization: Bearer $(TF_VAR_cloudflare_api_token)" \
+	https://api.cloudflare.com/client/v4/user/tokens/permission_groups | jq

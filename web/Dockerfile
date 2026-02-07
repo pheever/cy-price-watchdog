@@ -3,16 +3,17 @@ RUN corepack enable && corepack prepare yarn@4.12.0 --activate
 
 WORKDIR /app
 
-COPY .yarnrc.yml web/package.json web/yarn.lock ./
+COPY package.json yarn.lock ./
+RUN echo "nodeLinker: node-modules" > .yarnrc.yml
 RUN yarn install --immutable
 
-COPY web/ .
+COPY . .
 RUN yarn build
 
 FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

@@ -5,7 +5,7 @@ React frontend for Cyprus Price Watchdog.
 ## Prerequisites
 
 - Node.js 22+
-- API server running on port 3000
+- API running on port 3000
 
 ## Development
 

@@ -33,7 +33,7 @@ export DATABASE_URL="postgresql://admin:admin_password@localhost:5432/scraper_db
 |------|-------------|---------|
 | `admin` | superuser (owner) | migrations |
 | `data_writer` | SELECT, INSERT, UPDATE, DELETE | scraper |
-| `data_reader` | SELECT only | server (API) |
+| `data_reader` | SELECT only | api |
 
 Users are created by `init/001_users.sql` on container startup.
 

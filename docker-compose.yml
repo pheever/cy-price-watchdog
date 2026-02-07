@@ -43,7 +43,7 @@ services:
       sh -c "apk add --no-cache postgresql-client &&
              yarn install --frozen-lockfile &&
              DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB} yarn prisma migrate deploy &&
-             PGPASSWORD=${POSTGRES_PASSWORD} psql -h database -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /app/init/001_users.sql"
+             PGPASSWORD=${POSTGRES_PASSWORD} psql -h database -U ${POSTGRES_USER} -d ${POSTGRES_DB} -v data_writer_pass=${DATA_WRITER_PASS} -v data_reader_pass=${DATA_READER_PASS} -f /app/init/001_users.sql"
     restart: "no"
     depends_on:
       database:
@@ -63,18 +63,18 @@ services:
     command: >
       sh -c "for f in /scripts/*.sql; do
                echo \"Running $$f...\";
-               psql -h timescaledb -U ${METRICS_USER} -d ${METRICS_DB} -f $$f;
+               psql -h timescaledb -U ${METRICS_USER} -d ${METRICS_DB} -v metrics_writer_pass=${METRICS_WRITER_PASS} -v metrics_reader_pass=${METRICS_READER_PASS} -f $$f;
              done"
     restart: "no"
     depends_on:
       timescaledb:
         condition: service_healthy
 
-  server:
+  api:
     build:
       context: .
-      dockerfile: server/Dockerfile.dev
-    container_name: server
+      dockerfile: api/Dockerfile.dev
+    container_name: api
     restart: unless-stopped
     env_file: *env-file
     environment:
@@ -85,10 +85,10 @@ services:
     networks:
       - app-network
     volumes:
-      - ./server/src:/app/src
-      - ./server/public:/app/public
-      - ./server/next.config.js:/app/next.config.js
-      - ./server/tsconfig.json:/app/tsconfig.json
+      - ./api/src:/app/src
+      - ./api/public:/app/public
+      - ./api/next.config.js:/app/next.config.js
+      - ./api/tsconfig.json:/app/tsconfig.json
       - ./database/prisma:/app/prisma:ro
     depends_on:
       migrate:
@@ -96,13 +96,13 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./server/src
+          path: ./api/src
           target: /app/src
         - action: sync
-          path: ./server/public
+          path: ./api/public
           target: /app/public
         - action: rebuild
-          path: ./server/package.json
+          path: ./api/package.json
         - action: sync+restart
           path: ./database/prisma/schema.prisma
           target: /app/prisma/schema.prisma
@@ -143,7 +143,7 @@ services:
     networks:
       - app-network
     environment:
-      - VITE_API_URL=http://server:3000
+      - VITE_API_URL=http://api:3000
     volumes:
       - ./web/src:/app/src
       - ./web/public:/app/public
@@ -151,7 +151,7 @@ services:
       - ./web/vite.config.ts:/app/vite.config.ts
       - ./web/tsconfig.json:/app/tsconfig.json
     depends_on:
-      - server
+      - api
     develop:
       watch:
         - action: sync
@@ -174,7 +174,6 @@ services:
       - POSTGRES_DB=${METRICS_DB}
     volumes:
       - timescaledb_data:/var/lib/postgresql/data
-      - ./metrics/schema:/docker-entrypoint-initdb.d:ro
     ports:
       - "5433:5432"
     networks:
@@ -228,7 +227,7 @@ services:
         condition: service_completed_successfully
       web:
         condition: service_started
-      server:
+      api:
         condition: service_started
 
 networks:

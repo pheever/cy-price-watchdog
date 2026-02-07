@@ -1,6 +1,6 @@
 .PHONY: install dev build start lint typecheck image clean
 
-BUILD_IMG := cy-price-watchdog-server
+BUILD_IMG := cy-price-watchdog-api
 BUILD_IMG_TAG := dev
 
 install:

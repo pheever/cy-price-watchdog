@@ -1,6 +1,6 @@
-output "server_url" {
-  description = "URL of the API server"
-  value       = google_cloud_run_v2_service.server.uri
+output "api_url" {
+  description = "URL of the API"
+  value       = google_cloud_run_v2_service.api.uri
 }
 
 output "web_url" {

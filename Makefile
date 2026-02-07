@@ -21,9 +21,9 @@ logs:
 migrate:
 	docker compose up migrate
 
-# Regenerate Prisma client in server container
+# Regenerate Prisma client in api container
 generate:
-	docker compose exec server yarn prisma generate --schema=./prisma/schema.prisma
+	docker compose exec api yarn prisma generate --schema=./prisma/schema.prisma
 
 # Rebuild specific service
 rebuild:

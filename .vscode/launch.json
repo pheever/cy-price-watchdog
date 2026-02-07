@@ -10,10 +10,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/scraper/src",
-      "envFile": "${workspaceFolder}/.env",
-      "env": {
-        "DATABASE_URL": "postgresql://admin:admin_password@localhost:5432/scraper_db"
-      }
+      "envFile": "${workspaceFolder}/.env"
     }
   ]
 }

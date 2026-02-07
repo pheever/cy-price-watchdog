@@ -54,9 +54,9 @@ All the database schema management should be contained in `database/`
 
 All the code related to scraping the prices api should be contained in `scraper/`
 
-### Server
+### API
 
-All API server code for serving the application data should be contained in `server/`
+All API server code for serving the application data should be contained in `api/`
 
 ### Web application
 

@@ -1,4 +1,4 @@
-# Server
+# API
 
 Next.js 14 API server for Cyprus Price Watchdog.
 
@@ -13,7 +13,7 @@ Next.js 14 API server for Cyprus Price Watchdog.
 export DATABASE_URL="postgresql://data_reader:data_reader_pass@localhost:5432/scraper_db"
 ```
 
-Note: The server uses `data_reader` (read-only) since it only queries data.
+Note: The API uses `data_reader` (read-only) since it only queries data.
 
 ## Development
 
@@ -25,7 +25,7 @@ From the project root:
 docker compose up
 ```
 
-The server runs on http://localhost:3000 with hot reloading enabled. Changes to `src/` are reflected immediately.
+The API runs on http://localhost:3000 with hot reloading enabled. Changes to `src/` are reflected immediately.
 
 ### Standalone
 
@@ -64,11 +64,11 @@ make dev
 | `/api/products/:id/prices` | GET | Get price history |
 | `/api/stores` | GET | List stores |
 | `/api/stats` | GET | Get statistics |
-| `/api/metrics` | GET | Server metrics (for Telegraf) |
+| `/api/metrics` | GET | API metrics (for Telegraf) |
 
 ## Metrics Endpoint
 
-The `/api/metrics` endpoint exposes server metrics for Telegraf to scrape:
+The `/api/metrics` endpoint exposes API metrics for Telegraf to scrape:
 
 ```json
 {

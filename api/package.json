@@ -1,5 +1,5 @@
 {
-  "name": "cy-price-watchdog-server",
+  "name": "cy-price-watchdog-api",
   "version": "1.0.0",
   "license": "MIT",
   "private": true,
@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "prisma:generate": "prisma generate --schema=../database/prisma/schema.prisma",
     "postinstall": "prisma generate --schema=../database/prisma/schema.prisma"
   },
@@ -27,6 +28,7 @@
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "prisma": "^7.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18"
   }
 }

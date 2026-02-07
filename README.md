@@ -46,10 +46,10 @@ This starts:
 | `make start` | Start all services |
 | `make stop` | Stop all services |
 | `make watch` | Start with file watching (hot reload) |
-| `make logs` | View logs (`SERVICE=server make logs` for specific service) |
+| `make logs` | View logs (`SERVICE=api make logs` for specific service) |
 | `make migrate` | Run database migrations |
 | `make generate` | Regenerate Prisma client |
-| `make rebuild` | Rebuild service (`SERVICE=server make rebuild`) |
+| `make rebuild` | Rebuild service (`SERVICE=api make rebuild`) |
 
 ## Project Structure
 
@@ -57,7 +57,7 @@ This starts:
 |-----------|-------------|
 | `database/` | Prisma schema and migrations |
 | `scraper/` | Go scraper for eKalathi API |
-| `server/` | Next.js API server |
+| `api/` | Next.js API server |
 | `web/` | React frontend (Vite) |
 | `metrics/` | Observability (TimescaleDB + Telegraf + Grafana) |
 | `iac/` | Terraform for Google Cloud deployment |
@@ -68,7 +68,7 @@ This starts:
 |------|----------|-------------|---------|
 | `admin` | scraper_db | superuser | migrations |
 | `data_writer` | scraper_db | read-write | scraper |
-| `data_reader` | scraper_db | read-only | server (API) |
+| `data_reader` | scraper_db | read-only | api |
 | `metrics_user` | metrics_db | superuser | schema setup |
 | `metrics_writer` | metrics_db | read-write | telegraf |
 | `metrics_reader` | metrics_db | read-only | grafana |

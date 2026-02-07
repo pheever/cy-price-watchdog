@@ -2,7 +2,7 @@ FROM node:22-alpine AS base
 
 FROM base AS deps
 WORKDIR /app
-COPY server/package.json server/yarn.lock ./
+COPY api/package.json api/yarn.lock ./
 # Skip postinstall - we'll run prisma generate after copying the schema
 RUN yarn install --frozen-lockfile --ignore-scripts
 
@@ -13,7 +13,7 @@ ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY server/ .
+COPY api/ .
 # Copy Prisma schema from database module and config
 COPY database/prisma ./prisma
 COPY database/prisma.config.ts ./prisma.config.ts
@@ -35,7 +35,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy entrypoint script
-COPY --chown=nextjs:nodejs server/entrypoint.sh ./entrypoint.sh
+COPY --chown=nextjs:nodejs api/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
 USER nextjs

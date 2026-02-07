@@ -111,16 +111,16 @@ resource "google_secret_manager_secret_iam_member" "cloudrun_secret" {
   member    = "serviceAccount:${google_service_account.cloudrun.email}"
 }
 
-# Cloud Run - API Server
-resource "google_cloud_run_v2_service" "server" {
-  name     = "cy-price-watchdog-server"
+# Cloud Run - API
+resource "google_cloud_run_v2_service" "api" {
+  name     = "cy-price-watchdog-api"
   location = var.region
 
   template {
     service_account = google_service_account.cloudrun.email
 
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.containers.repository_id}/server:latest"
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.containers.repository_id}/api:latest"
 
       ports {
         container_port = 3000
@@ -163,9 +163,9 @@ resource "google_cloud_run_v2_service" "server" {
   ]
 }
 
-# Allow public access to API server
-resource "google_cloud_run_v2_service_iam_member" "server_public" {
-  name     = google_cloud_run_v2_service.server.name
+# Allow public access to API
+resource "google_cloud_run_v2_service_iam_member" "api_public" {
+  name     = google_cloud_run_v2_service.api.name
   location = var.region
   role     = "roles/run.invoker"
   member   = "allUsers"
@@ -186,7 +186,7 @@ resource "google_cloud_run_v2_service" "web" {
 
       env {
         name  = "API_URL"
-        value = google_cloud_run_v2_service.server.uri
+        value = google_cloud_run_v2_service.api.uri
       }
 
       resources {

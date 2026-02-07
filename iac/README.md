@@ -15,7 +15,7 @@ Internet --> Cloudflare Edge (DNS, CDN, Pages)
             |                                           |
             |   GCE VM (internal IP only)               |
             |   +- cloudflared (tunnel daemon)          |
-            |   +- server (Next.js API, :3000)          |
+            |   +- api (Next.js API, :3000)             |
             |   +- postgres (scraper_db, :5432)         |
             |   +- timescaledb (metrics_db, :5433)      |
             |   +- telegraf (metrics collector, :8186)  |
@@ -33,7 +33,7 @@ Internet --> Cloudflare Edge (DNS, CDN, Pages)
 |-----------|----------|-------|
 | Web (Vite SPA) | Cloudflare Pages | Free, global CDN |
 | DNS | Cloudflare | Free |
-| API Server | GCE VM (Docker) | Co-located with databases |
+| API | GCE VM (Docker) | Co-located with databases |
 | PostgreSQL | GCE VM (Docker) | Scraper DB |
 | TimescaleDB | GCE VM (Docker) | Metrics DB |
 | Telegraf | GCE VM (Docker) | Metrics collection |
@@ -46,7 +46,7 @@ Internet --> Cloudflare Edge (DNS, CDN, Pages)
 - **Cloud NAT** provides outbound internet access for the VM (Docker image pulls, OS updates).
 - **Cloud Run** reaches the VM via internal IP using Direct VPC Egress within the same VPC.
 - Firewall rules only allow internal VPC traffic between Cloud Run and the VM.
-- Cloudflare Tunnel selectively exposes services (server, grafana) on specific subdomains.
+- Cloudflare Tunnel selectively exposes services (api, grafana) on specific subdomains.
 
 ### CI/CD
 
@@ -113,4 +113,4 @@ make init
 
 **Total: ~€13/mo**
 
-Observed memory usage for VM-hosted services (server, postgres, timescaledb, telegraf, grafana, cloudflared) is ~650MB, well within the e2-small's 2GB limit.
+Observed memory usage for VM-hosted services (api, postgres, timescaledb, telegraf, grafana, cloudflared) is ~650MB, well within the e2-small's 2GB limit.

@@ -20,3 +20,6 @@ image:
 
 run:
 	DATABASE_URL=$(DB) go run .
+
+test:
+	cd src && go test ./ekalathi-api/ ./metrics/ -v

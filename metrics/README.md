@@ -6,7 +6,7 @@ Application observability using TimescaleDB for metrics storage, Telegraf for co
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   nginx     │     │   server    │     │   scraper   │
+│   nginx     │     │     api     │     │   scraper   │
 │ /stub_status│     │ /api/metrics│     │   (batch)   │
 └──────┬──────┘     └──────┬──────┘     └──────┬──────┘
        │                   │                   │
@@ -31,7 +31,7 @@ Application observability using TimescaleDB for metrics storage, Telegraf for co
 ```
 
 **Collection Methods:**
-- **Pull**: Telegraf scrapes nginx stub_status and server /api/metrics every 10 seconds
+- **Pull**: Telegraf scrapes nginx stub_status and api /api/metrics every 10 seconds
 - **Push**: Scraper POSTs metrics to Telegraf at end of run (InfluxDB line protocol)
 
 ## Directory Structure
@@ -55,8 +55,7 @@ metrics/
 │   │       └── dashboards.yml  # Dashboard provisioning config
 │   └── dashboards/
 │       └── .gitkeep
-└── sdk/
-    └── README.md
+└── SDK.md                      # Planned metrics SDK spec
 ```
 
 ## Database Users
@@ -80,7 +79,7 @@ metrics/
 | `nginx_writing` | Connections writing response |
 | `nginx_waiting` | Keep-alive connections |
 
-### server (pulled)
+### api (pulled)
 | Metric | Description |
 |--------|-------------|
 | `memory_heap_used` | Node.js heap memory used |
@@ -139,9 +138,10 @@ docker exec -it timescaledb psql -U metrics_user -d metrics_db
 - [x] Write SQL schema scripts
 - [x] Create Grafana datasource provisioning
 - [x] Add Telegraf for metrics collection
-- [x] Implement server /api/metrics endpoint
+- [x] Implement api /api/metrics endpoint
 - [x] Implement scraper metrics push
 - [x] Configure nginx stub_status
 - [ ] Design API overview dashboard
 - [ ] Design scraper dashboard
 - [ ] Set up alerting rules
+- [ ] Implement [Metrics SDK](SDK.md)

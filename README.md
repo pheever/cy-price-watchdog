@@ -1,5 +1,11 @@
 # Cyprus Price Watchdog
 
+[![CI](https://github.com/pheever/cy-price-watchdog/actions/workflows/ci.yml/badge.svg)](https://github.com/pheever/cy-price-watchdog/actions/workflows/ci.yml)
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go&logoColor=white)](https://go.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-24-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Terraform](https://img.shields.io/badge/Terraform-844FBA?logo=terraform&logoColor=white)](https://www.terraform.io/)
+
 Since Cyprus government [eKalathi](https://www.e-kalathi.gov.cy/) release, consumers are able to compare prices. But the consumers are unable to monitor the increase of the prices relative to other prices or the inflation.
 
 This tool comes to serve this exact purpose, to monitor the price fluctuation over time and compare with the inflation and commodities that affect inflation.

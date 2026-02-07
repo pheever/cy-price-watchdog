@@ -26,6 +26,7 @@ When generating code:
 3. Generate database queries with proper indexing considerations
 4. Include rate limiting middleware on all public endpoints
 5. All repo modules should come with a README.md and a Makefile
+6. When a module is updated make sure the changes are documented
 
 ## Components
 

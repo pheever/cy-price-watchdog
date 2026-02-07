@@ -49,7 +49,7 @@ export default function Layout() {
               gap: '0.5rem',
               padding: '0.5rem 0.75rem',
               border: '1px solid var(--color-border)',
-              borderRadius: '6px',
+              borderRadius: '5px',
               background: 'var(--color-surface)',
               cursor: 'pointer',
               fontSize: '0.875rem',

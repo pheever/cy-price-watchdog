@@ -36,7 +36,9 @@ jobs:
         working-directory: database
       - run: yarn install --immutable
         working-directory: api
-      - run: yarn prisma generate --schema=../database/prisma/schema.prisma
+      - run: cp -r ../database/prisma ./prisma && cp ../database/prisma.config.ts ./prisma.config.ts
+        working-directory: api
+      - run: yarn prisma generate --schema=./prisma/schema.prisma
         working-directory: api
       - run: yarn typecheck
         working-directory: api

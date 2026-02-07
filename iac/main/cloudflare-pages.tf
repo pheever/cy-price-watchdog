@@ -7,20 +7,26 @@ resource "cloudflare_pages_project" "web" {
     type = "github"
 
     config {
-      owner             = split("/", local.github_repo)[0]
-      repo_name         = split("/", local.github_repo)[1]
-      production_branch = "main"
+      owner                         = split("/", local.github_repo)[0]
+      repo_name                     = split("/", local.github_repo)[1]
+      production_branch             = "main"
+      deployments_enabled           = true
+      production_deployment_enabled = true
+      preview_deployment_setting    = "none"
     }
   }
 
   build_config {
-    build_command   = "cd web && yarn install && yarn build"
-    destination_dir = "web/dist"
+    build_command       = "yarn install && yarn build"
+    destination_dir     = "dist"
+    root_dir            = "web"
   }
 
   deployment_configs {
     production {
       environment_variables = {
+        NODE_VERSION = "24"
+        YARN_VERSION = "4"
         VITE_API_URL = "https://api.${var.domain}"
       }
     }

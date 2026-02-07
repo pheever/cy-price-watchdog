@@ -35,6 +35,8 @@ jobs:
         working-directory: database
       - run: yarn install --frozen-lockfile
         working-directory: api
+      - run: yarn prisma generate --schema=../database/prisma/schema.prisma
+        working-directory: api
       - run: yarn typecheck
         working-directory: api
       - run: yarn test

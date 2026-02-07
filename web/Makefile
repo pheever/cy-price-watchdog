@@ -23,7 +23,7 @@ typecheck:
 	yarn typecheck
 
 image:
-	docker build $(extraBuildArgs) -t $(BUILD_IMG):$(BUILD_IMG_TAG) -f Dockerfile ..
+	docker build $(extraBuildArgs) -t $(BUILD_IMG):$(BUILD_IMG_TAG) .
 
 clean:
 	rm -rf node_modules dist

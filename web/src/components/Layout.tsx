@@ -16,10 +16,11 @@ export default function Layout() {
         <div className="container" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 700, fontSize: '1.25rem', color: 'var(--color-text)', textDecoration: 'none' }}>
             <img src="/logo.png" alt="Cyprus Price Watchdog" style={{ height: '40px', width: 'auto' }} />
+            {/* TODO: review to remove entirely
             <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
               <span>Cyprus Price</span>
               <span style={{ color: 'var(--color-primary)' }}>Watchdog</span>
-            </span>
+            </span> */}
           </Link>
           <nav style={{ display: 'flex', gap: '1.5rem', flex: 1 }}>
             <Link to="/categories">{t('nav.categories')}</Link>
@@ -48,7 +49,7 @@ export default function Layout() {
               gap: '0.5rem',
               padding: '0.5rem 0.75rem',
               border: '1px solid var(--color-border)',
-              borderRadius: '6px',
+              borderRadius: '5px',
               background: 'var(--color-surface)',
               cursor: 'pointer',
               fontSize: '0.875rem',

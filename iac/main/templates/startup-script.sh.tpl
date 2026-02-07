@@ -76,7 +76,7 @@ services:
       retries: 5
 
   migrate:
-    image: node:22-alpine
+    image: node:24-alpine
     container_name: migrate
     working_dir: /app
     env_file:

@@ -5,6 +5,7 @@ Client libraries for sending metrics and events to TimescaleDB.
 ## Planned Components
 
 ### Server SDK (TypeScript)
+
 ```typescript
 // Record a metric
 recordMetric(name: string, value: number, tags?: Record<string, string>): void
@@ -17,6 +18,7 @@ flush(): Promise<void>
 ```
 
 ### Client SDK (Browser)
+
 ```typescript
 // Track user interaction
 track(event: string, properties?: Record<string, unknown>): void

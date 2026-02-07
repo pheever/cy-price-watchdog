@@ -4,7 +4,7 @@ Application observability using TimescaleDB for metrics storage, Telegraf for co
 
 ## Architecture
 
-```
+```text
 ┌─────────────┐     ┌─────────────┐
 │     api     │     │   scraper   │
 │ /api/metrics│     │   (batch)   │
@@ -32,12 +32,13 @@ Application observability using TimescaleDB for metrics storage, Telegraf for co
 ```
 
 **Collection Methods:**
+
 - **Pull**: Telegraf scrapes api `/api/metrics` every 10 seconds
 - **Push**: Scraper POSTs metrics to Telegraf at end of run (InfluxDB line protocol)
 
 ## Directory Structure
 
-```
+```text
 metrics/
 ├── README.md
 ├── schema/
@@ -70,6 +71,7 @@ metrics/
 ## Metrics Collected
 
 ### api (pulled)
+
 | Metric | Description |
 |--------|-------------|
 | `memory_heap_used` | Node.js heap memory used |
@@ -82,6 +84,7 @@ metrics/
 | `requests_5xx` | Server errors |
 
 ### scraper (pushed)
+
 | Metric | Description |
 |--------|-------------|
 | `scraper.duration` | Duration per phase (regions, categories, products, prices) |

@@ -30,6 +30,7 @@ make watch
 ```
 
 This starts:
+
 - **PostgreSQL** on port 5432
 - **TimescaleDB** on port 5433 (metrics)
 - **Adminer** (DB UI) on port 8081

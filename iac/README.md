@@ -4,7 +4,7 @@ Terraform configuration for deploying Cyprus Price Watchdog to Google Cloud + Cl
 
 ## Architecture
 
-```
+```text
 Internet --> Cloudflare Edge (DNS, CDN, Pages)
                   |
                   | Cloudflare Tunnel (outbound-initiated, no public IP)
@@ -69,14 +69,14 @@ Internet --> Cloudflare Edge (DNS, CDN, Pages)
 gcloud storage buckets create gs://cy-price-watchdog-tfstate --location=eu
 ```
 
-2. Copy and configure variables:
+1. Copy and configure variables:
 
 ```bash
 cp terraform.tfvars.example terraform.tfvars
 # Edit terraform.tfvars with your values
 ```
 
-3. Initialize Terraform:
+1. Initialize Terraform:
 
 ```bash
 make init
@@ -111,6 +111,6 @@ make init
 | Cloud Run (scraper) | Free tier (scheduled job) | ~€0 |
 | GitHub Container Registry | Free tier | €0 |
 
-**Total: ~€13/mo**
+Total: ~€13/mo
 
 Observed memory usage for VM-hosted services (api, postgres, timescaledb, telegraf, grafana, cloudflared) is ~650MB, well within the e2-small's 2GB limit.

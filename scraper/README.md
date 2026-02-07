@@ -79,6 +79,7 @@ Metrics are sent in InfluxDB line protocol format.
 ## Scheduling
 
 The scraper is designed to run periodically (every 6 hours). In production, use:
+
 - Cloud Scheduler (Google Cloud)
 - Kubernetes CronJob
 - Systemd timer

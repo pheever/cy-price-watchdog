@@ -47,15 +47,19 @@ Users are created by `init/001_users.sql`, executed by the `migrate` service in 
 ## Schema
 
 ### Category
+
 Hierarchical product categories from eKalathi.
 
 ### Product
+
 Individual products with bilingual names.
 
 ### Store
+
 Retail stores/supermarkets.
 
 ### Price
+
 Price records with timestamps for historical tracking.
 
 ## Migration Workflow
@@ -97,6 +101,7 @@ make migrate-dev
 ```
 
 This will:
+
 1. Apply any pending migrations first
 2. Compare `schema.prisma` against the database
 3. Generate a new migration for any changes

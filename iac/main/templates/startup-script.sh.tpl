@@ -83,11 +83,13 @@ services:
       - .env
     volumes:
       - /opt/app/repo/database:/app
+      - /opt/app/repo/.yarnrc.yml:/app/.yarnrc.yml:ro
     networks:
       - app-network
     command: >
-      sh -c "apk add --no-cache postgresql-client &&
-             yarn install --frozen-lockfile &&
+      sh -c "corepack enable &&
+             apk add --no-cache postgresql-client &&
+             yarn install --immutable &&
              DATABASE_URL=postgresql://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@database:5432/$${POSTGRES_DB} yarn prisma migrate deploy &&
              PGPASSWORD=$${POSTGRES_PASSWORD} psql -h database -U $${POSTGRES_USER} -d $${POSTGRES_DB} -v data_writer_pass=$${DATA_WRITER_PASS} -v data_reader_pass=$${DATA_READER_PASS} -f /app/init/001_users.sql"
     restart: "no"

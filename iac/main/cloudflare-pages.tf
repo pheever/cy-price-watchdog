@@ -14,13 +14,16 @@ resource "cloudflare_pages_project" "web" {
   }
 
   build_config {
-    build_command   = "cd web && yarn install && yarn build"
-    destination_dir = "web/dist"
+    build_command       = "yarn install && yarn build"
+    destination_dir     = "dist"
+    root_dir            = "web"
   }
 
   deployment_configs {
     production {
       environment_variables = {
+        NODE_VERSION = "24"
+        YARN_VERSION = "4"
         VITE_API_URL = "https://api.${var.domain}"
       }
     }

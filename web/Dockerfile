@@ -1,5 +1,5 @@
 FROM node:24-alpine AS builder
-RUN corepack enable
+RUN corepack enable && corepack prepare yarn@4.12.0 --activate
 
 WORKDIR /app
 

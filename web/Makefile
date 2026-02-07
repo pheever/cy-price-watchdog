@@ -2,6 +2,7 @@
 
 BUILD_IMG := cy-price-watchdog-web
 BUILD_IMG_TAG := dev
+extraBuildArgs :=
 
 install:
 	yarn install
@@ -22,7 +23,7 @@ typecheck:
 	yarn typecheck
 
 image:
-	docker build -t $(BUILD_IMG):$(BUILD_IMG_TAG) -f Dockerfile ..
+	docker build $(extraBuildArgs) -t $(BUILD_IMG):$(BUILD_IMG_TAG) -f Dockerfile ..
 
 clean:
 	rm -rf node_modules dist

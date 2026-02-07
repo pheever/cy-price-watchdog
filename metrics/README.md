@@ -5,33 +5,34 @@ Application observability using TimescaleDB for metrics storage, Telegraf for co
 ## Architecture
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   nginx     │     │     api     │     │   scraper   │
-│ /stub_status│     │ /api/metrics│     │   (batch)   │
-└──────┬──────┘     └──────┬──────┘     └──────┬──────┘
-       │                   │                   │
-       │◄── pull (10s) ────┤                   │
-       │                   │              push ▼
-       │                   │         ┌─────────────────┐
-       └───────────────────┴────────▶│    Telegraf     │
-                                     │    :8186        │
-                                     └────────┬────────┘
-                                              │
-                                              ▼
-                                     ┌─────────────────┐
-                                     │   TimescaleDB   │
-                                     │    :5433        │
-                                     └────────┬────────┘
-                                              │
-                                              ▼
-                                     ┌─────────────────┐
-                                     │    Grafana      │
-                                     │    :3001        │
-                                     └─────────────────┘
+┌─────────────┐     ┌─────────────┐
+│     api     │     │   scraper   │
+│ /api/metrics│     │   (batch)   │
+└──────┬──────┘     └──────┬──────┘
+       │                   │
+       │ pull (10s)   push │
+       │                   │
+       ▼                   ▼
+┌─────────────────────────────────┐
+│            Telegraf             │
+│             :8186               │
+└────────────────┬────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────┐
+│          TimescaleDB            │
+│             :5433               │
+└────────────────┬────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────┐
+│            Grafana              │
+│             :3001               │
+└─────────────────────────────────┘
 ```
 
 **Collection Methods:**
-- **Pull**: Telegraf scrapes nginx stub_status and api /api/metrics every 10 seconds
+- **Pull**: Telegraf scrapes api `/api/metrics` every 10 seconds
 - **Push**: Scraper POSTs metrics to Telegraf at end of run (InfluxDB line protocol)
 
 ## Directory Structure
@@ -67,17 +68,6 @@ metrics/
 | `metrics_reader` | read-only | grafana |
 
 ## Metrics Collected
-
-### nginx (pulled)
-| Metric | Description |
-|--------|-------------|
-| `nginx_active` | Current active connections |
-| `nginx_accepts` | Total accepted connections |
-| `nginx_handled` | Total handled connections |
-| `nginx_requests` | Total requests |
-| `nginx_reading` | Connections reading request |
-| `nginx_writing` | Connections writing response |
-| `nginx_waiting` | Keep-alive connections |
 
 ### api (pulled)
 | Metric | Description |
@@ -140,7 +130,7 @@ docker exec -it timescaledb psql -U metrics_user -d metrics_db
 - [x] Add Telegraf for metrics collection
 - [x] Implement api /api/metrics endpoint
 - [x] Implement scraper metrics push
-- [x] Configure nginx stub_status
+- [ ] Configure nginx stub_status (when production nginx is added)
 - [ ] Design API overview dashboard
 - [ ] Design scraper dashboard
 - [ ] Set up alerting rules

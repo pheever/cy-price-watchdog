@@ -9,9 +9,7 @@ Next.js 14 API server for Cyprus Price Watchdog.
 
 ## Environment
 
-```bash
-export DATABASE_URL="postgresql://data_reader:data_reader_pass@localhost:5432/scraper_db"
-```
+Set `DATABASE_URL` in the root `.env` file (see root README). The API uses the `data_reader` role (read-only).
 
 Note: The API uses `data_reader` (read-only) since it only queries data.
 
@@ -44,6 +42,7 @@ make dev
 | `make start` | Start production server |
 | `make lint` | Run ESLint |
 | `make typecheck` | Run TypeScript type checking |
+| `yarn test` | Run unit tests (Vitest) |
 
 ## Docker
 
@@ -62,6 +61,7 @@ make dev
 | `/api/products` | GET | List products (paginated) |
 | `/api/products/:id` | GET | Get product by ID |
 | `/api/products/:id/prices` | GET | Get price history |
+| `/api/products/:id/stats` | GET | Get product price statistics |
 | `/api/stores` | GET | List stores |
 | `/api/stats` | GET | Get statistics |
 | `/api/metrics` | GET | API metrics (for Telegraf) |

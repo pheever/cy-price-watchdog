@@ -4,17 +4,12 @@ Go service that scrapes product prices from the Cyprus eKalathi API and stores t
 
 ## Prerequisites
 
-- Go 1.23+
+- Go 1.25+
 - PostgreSQL 15+
 
 ## Environment
 
-```bash
-export DATABASE_URL="postgresql://data_writer:data_writer_pass@localhost:5432/scraper_db"
-export METRICS_URL="http://localhost:8186/write"  # Optional: Telegraf endpoint
-```
-
-Note: The scraper uses `data_writer` (read-write) since it inserts/updates data.
+Set `DATABASE_URL` and optionally `METRICS_URL` in the root `.env` file (see root README). The scraper uses the `data_writer` role (read-write).
 
 ## Commands
 
@@ -23,6 +18,7 @@ Note: The scraper uses `data_writer` (read-write) since it inserts/updates data.
 | `make build` | Build the scraper binary |
 | `make clean` | Remove build artifacts |
 | `make image` | Build Docker image |
+| `make test` | Run unit tests |
 
 ## Running
 
@@ -74,7 +70,11 @@ Metrics are sent in InfluxDB line protocol format.
 ## API Endpoints Used
 
 - `GET /ekalathi-website-server/api/fetch-product-categories` - List all categories
-- `GET /ekalathi-website-server/api/fetch-products-list` - List products with prices
+- `GET /ekalathi-website-server/api/fetch-product-list` - List products
+- `GET /ekalathi-website-server/api/fetch-product` - Get single product
+- `GET /ekalathi-website-server/api/fetch-regions` - List regions
+- `GET /ekalathi-website-server/api/fetch-companies` - List companies
+- `GET /ekalathi-website-server/api/retail/fetch-retail-branch-list` - List retail branches with prices
 
 ## Scheduling
 

@@ -6,8 +6,7 @@ This tool comes to serve this exact purpose, to monitor the price fluctuation ov
 
 ## How it works
 
-The tool has 3 components. The scraper, the database and the web application.
-The scraper is responsible to scrape the prices from the government's API every 6 hours. The data it collects are then stored in a database (timestamp, price, product etc). The web application consists of a web server serving the application and an API server to serve the data from the database. The web application is the user interface, designed to make it simple for everyday and non technical users.
+The scraper fetches product prices from the government's eKalathi API every 6 hours and stores them in PostgreSQL. The API server exposes the data through a REST API, and the web frontend provides a user-friendly interface for browsing and comparing prices. Metrics are collected via Telegraf into TimescaleDB and visualized with Grafana.
 
 ## Local Development
 

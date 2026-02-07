@@ -40,6 +40,7 @@ The development server proxies `/api` requests to `http://localhost:3000` (or `V
 | `make preview` | Preview production build |
 | `make lint` | Run ESLint |
 | `make typecheck` | Run TypeScript type checking |
+| `yarn test` | Run unit tests (Vitest) |
 
 ## Docker
 
@@ -53,12 +54,12 @@ The development server proxies `/api` requests to `http://localhost:3000` (or `V
 - `/` - Dashboard with statistics
 - `/categories` - Browse product categories
 - `/categories/:id` - Category detail with products
-- `/products/:id` - Product detail with price chart
+- `/products/:id` - Product detail with price comparison by store and district
 
 ## Tech Stack
 
 - React 18
 - React Router 7
-- Recharts (price charts)
-- Vite (build tool)
+- Vite 6 (build tool)
 - TypeScript
+- Bilingual support (Greek / English)

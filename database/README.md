@@ -21,11 +21,7 @@ With Docker Compose (from project root):
 docker compose up database
 ```
 
-Or set `DATABASE_URL` manually:
-
-```bash
-export DATABASE_URL="postgresql://admin:admin_password@localhost:5432/scraper_db"
-```
+Or set `DATABASE_URL` in the root `.env` file (see root README).
 
 ## Database Users
 
@@ -35,7 +31,7 @@ export DATABASE_URL="postgresql://admin:admin_password@localhost:5432/scraper_db
 | `data_writer` | SELECT, INSERT, UPDATE, DELETE | scraper |
 | `data_reader` | SELECT only | api |
 
-Users are created by `init/001_users.sql` on container startup.
+Users are created by `init/001_users.sql`, executed by the `migrate` service in docker-compose. Passwords are injected from the `.env` file via `psql -v` flags.
 
 ## Commands
 

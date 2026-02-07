@@ -3,8 +3,10 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore: ['iac/**']
   pull_request:
     branches: [main]
+    paths-ignore: ['iac/**']
 
 jobs:
   scraper:

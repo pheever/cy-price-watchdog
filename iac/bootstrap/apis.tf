@@ -11,6 +11,7 @@ resource "google_project_service" "services" {
     "sts.googleapis.com",
     "cloudbilling.googleapis.com",
     "serviceusage.googleapis.com",
+    "artifactregistry.googleapis.com",
   ])
 
   project            = google_project.this.project_id

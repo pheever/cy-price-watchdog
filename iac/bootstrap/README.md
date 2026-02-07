@@ -13,8 +13,8 @@ One-time Terraform module that creates the GCP foundation required by the main `
 | Cloud Run SA | `cloudrun-scraper@` — scraper runtime identity |
 | GitHub Actions SA | `github-actions@` — CI/CD via WIF |
 | WIF Pool + Provider | OIDC federation for GitHub Actions |
-| 9 Secrets | Empty Secret Manager containers (values managed by main module) |
-| Cloudflare API Token | Scoped token (Zone Read, DNS Write, Argo Tunnel Write) stored in Secret Manager |
+| 10 Secrets | Secret Manager containers (ghcr-token populated, rest managed by main module) |
+| Cloudflare API Token | Scoped token (Zone Read, DNS Write, Tunnel Write) stored in Secret Manager |
 | GitHub Actions Secrets | `WIF_PROVIDER`, `WIF_SA_EMAIL` for WIF-based CI/CD auth |
 | GitHub Actions Variables | `GCP_PROJECT_ID`, `GCP_REGION` |
 
@@ -23,12 +23,11 @@ One-time Terraform module that creates the GCP foundation required by the main `
 - Terraform >= 1.0
 - Google Cloud SDK (`gcloud`) authenticated with org/folder admin permissions
 - A GCP billing account ID — find it in the [Cloud Console](https://console.cloud.google.com/billing) or via `gcloud billing accounts list`
-- A GitHub fine-grained Personal Access Token (PAT) with these repository permissions:
-  - **Secrets** — Read and Write
-  - **Variables** — Read and Write
-  - Set an expiration date (e.g. 7 days) — the token is only needed during bootstrap
-- A Cloudflare API token — create one in [API Tokens](https://dash.cloudflare.com/profile/api-tokens) using the **Create Custom Token** template with **API Tokens Write** permission (this bootstrap token creates a scoped token for the main module). Set a short TTL since it's only needed during bootstrap
-- Your Cloudflare account ID — visible in the [dashboard](https://dash.cloudflare.com) sidebar or on any zone's overview page
+- A GitHub PAT with **repo admin** scope (for managing Actions secrets/variables), or use `gh auth token` — the Makefile auto-detects it
+- A GitHub classic PAT with **read:packages** scope (for pulling images from ghcr.io) — create one at [Settings > Developer settings > Personal access tokens > Tokens (classic)](https://github.com/settings/tokens)
+- Your Cloudflare **Global API Key** — find it at [Profile > API Tokens > Global API Key](https://dash.cloudflare.com/profile/api-tokens)
+- Your Cloudflare **account email**
+- Your Cloudflare **account ID** — visible in the [dashboard](https://dash.cloudflare.com) sidebar or on any zone's overview page
 
 ## Setup
 

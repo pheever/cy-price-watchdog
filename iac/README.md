@@ -2,6 +2,15 @@
 
 Terraform configuration for deploying Cyprus Price Watchdog to Google Cloud + Cloudflare.
 
+## Modules
+
+| Module | Purpose |
+|--------|---------|
+| [`bootstrap/`](bootstrap/) | One-time project setup: GCP project, service accounts, WIF, secrets, Cloudflare API token |
+| [`main/`](main/) | Runtime infrastructure: VPC, VM, Cloudflare Tunnel, Cloud Run, Pages |
+
+Apply **bootstrap** first, then **main**. Each module has its own `Makefile` and `README.md`.
+
 ## Architecture
 
 ```text
@@ -44,8 +53,8 @@ Internet --> Cloudflare Edge (DNS, CDN, Pages)
 
 - The VM has **no public IP**. All inbound traffic flows through a Cloudflare Tunnel (`cloudflared` daemon on the VM creates an outbound-only connection to Cloudflare's edge).
 - **Cloud NAT** provides outbound internet access for the VM (Docker image pulls, OS updates).
-- **Cloud Run** reaches the VM via internal IP using Direct VPC Egress within the same VPC.
-- Firewall rules only allow internal VPC traffic between Cloud Run and the VM.
+- **Cloud Run** reaches the VM via internal IP using a VPC Access Connector within the same VPC.
+- Firewall rules only allow internal VPC traffic and IAP SSH.
 - Cloudflare Tunnel selectively exposes services (api, grafana) on specific subdomains.
 
 ### CI/CD
@@ -54,63 +63,15 @@ Internet --> Cloudflare Edge (DNS, CDN, Pages)
 - Cloud Run pulls the scraper image from `ghcr.io`.
 - The VM pulls service images from `ghcr.io`.
 
-## Prerequisites
-
-- Terraform >= 1.0
-- Google Cloud SDK (`gcloud`)
-- A GCP project with billing enabled
-- A Cloudflare account with a registered domain
-
-## Setup
-
-1. Create a GCS bucket for Terraform state:
-
-```bash
-gcloud storage buckets create gs://cy-price-watchdog-tfstate --location=eu
-```
-
-1. Copy and configure variables:
-
-```bash
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your values
-```
-
-1. Initialize Terraform:
-
-```bash
-make init
-```
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `make init` | Initialize Terraform |
-| `make plan` | Preview changes |
-| `make apply` | Apply changes |
-| `make destroy` | Destroy all resources |
-| `make fmt` | Format Terraform files |
-| `make validate` | Validate configuration |
-
-## Terraform Providers
-
-| Provider | Purpose |
-|----------|---------|
-| `google` | GCE VM, VPC, Cloud NAT, Cloud Run, firewall rules |
-| `cloudflare` | DNS records, Tunnel, Pages project |
-
 ## Estimated Monthly Costs
 
 | Resource | Spec | Cost |
 |----------|------|------|
-| Cloudflare (Pages, DNS, Tunnel, CDN) | Free plan | €0 |
+| Cloudflare (Pages, DNS, Tunnel, CDN) | Free plan | ~€0 |
 | GCE VM | e2-small (0.5 vCPU, 2GB) | ~€8 |
 | Persistent disk | 30GB balanced | ~€3 |
 | Cloud NAT | Gateway + data processing | ~€1.50 |
 | Cloud Run (scraper) | Free tier (scheduled job) | ~€0 |
 | GitHub Container Registry | Free tier | €0 |
 
-Total: ~€13/mo
-
-Observed memory usage for VM-hosted services (api, postgres, timescaledb, telegraf, grafana, cloudflared) is ~650MB, well within the e2-small's 2GB limit.
+Total: **~€13/mo**

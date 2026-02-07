@@ -40,6 +40,14 @@ jobs:
       - run: yarn test
         working-directory: api
 
+  markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: "**/*.md"
+
   web:
     runs-on: ubuntu-latest
     defaults:

@@ -1,5 +1,6 @@
 # Cyprus Price Watchdog
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![CI](https://github.com/pheever/cy-price-watchdog/actions/workflows/ci.yml/badge.svg)](https://github.com/pheever/cy-price-watchdog/actions/workflows/ci.yml)
 [![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)

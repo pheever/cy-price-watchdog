@@ -1,0 +1,7 @@
+default: true
+
+# Allow long lines (tables, badges, URLs)
+MD013: false
+
+# Allow inline HTML
+MD033: false

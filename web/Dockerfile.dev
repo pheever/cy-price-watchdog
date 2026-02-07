@@ -1,9 +1,10 @@
 FROM node:24-alpine
+RUN corepack enable
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY .yarnrc.yml web/package.json web/yarn.lock ./
+RUN yarn install --immutable
 
 EXPOSE 5173
 

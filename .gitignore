@@ -1,2 +1,4 @@
 node_modules
 *.tsbuildinfo
+.yarn/*
+!.yarn/releases

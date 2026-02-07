@@ -1,10 +1,11 @@
 FROM node:24-alpine AS base
+RUN corepack enable
 
 FROM base AS deps
 WORKDIR /app
-COPY api/package.json api/yarn.lock ./
+COPY .yarnrc.yml api/package.json api/yarn.lock ./
 # Skip postinstall - we'll run prisma generate after copying the schema
-RUN yarn install --frozen-lockfile --ignore-scripts
+RUN yarn install --immutable --ignore-scripts
 
 FROM base AS builder
 WORKDIR /app

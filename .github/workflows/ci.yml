@@ -24,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -31,9 +32,13 @@ jobs:
           cache-dependency-path: |
             database/yarn.lock
             api/yarn.lock
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
         working-directory: database
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
+        working-directory: api
+      - run: cp -r ../database/prisma ./prisma && cp ../database/prisma.config.ts ./prisma.config.ts
+        working-directory: api
+      - run: yarn prisma generate --schema=./prisma/schema.prisma
         working-directory: api
       - run: yarn typecheck
         working-directory: api
@@ -47,12 +52,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: yarn
           cache-dependency-path: yarn.lock
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
       - run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
 
   markdown:
@@ -70,12 +76,13 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: yarn
           cache-dependency-path: web/yarn.lock
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
       - run: yarn typecheck
       - run: yarn test
 

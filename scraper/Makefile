@@ -1,5 +1,7 @@
-include ../.env
-export
+ifneq (,$(wildcard ../.env))
+  include ../.env
+  export
+endif
 
 BUILD_DIR 		:= dist
 BUILD_IMG 		:= scraper

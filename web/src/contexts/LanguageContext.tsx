@@ -45,7 +45,7 @@ const translations: Record<Language, Record<string, string>> = {
     'sources.ekalathiDesc': 'Όλα τα δεδομένα τιμών προέρχονται από την επίσημη πλατφόρμα e-Kalathi, η οποία συντηρείται από την κυβέρνηση της Κύπρου. Αυτή η πλατφόρμα δημιουργήθηκε για να παρέχει διαφάνεια τιμών για βασικά καταναλωτικά αγαθά στα σούπερ μάρκετ της Κύπρου.',
     'sources.visitEkalathi': 'Επισκεφθείτε το e-Kalathi',
     'sources.dataCollection': 'Συλλογή Δεδομένων',
-    'sources.dataCollectionDesc': 'Τα δεδομένα τιμών συλλέγονται περιοδικά μέσω αυτοματοποιημένου scraper. Ο scraper ανακτά κατηγορίες προϊόντων, προϊόντα, πληροφορίες καταστημάτων και τρέχουσες τιμές από το API του e-Kalathi. Τα ιστορικά δεδομένα τιμών διατηρούνται για να επιτρέπουν την παρακολούθηση τιμών με την πάροδο του χρόνου.',
+    'sources.dataCollectionDesc': 'Τα δεδομένα τιμών συλλέγονται καθημερινά μέσω αυτοματοποιημένου scraper. Ο scraper ανακτά κατηγορίες προϊόντων, προϊόντα, πληροφορίες καταστημάτων και τρέχουσες τιμές από το API του e-Kalathi. Τα ιστορικά δεδομένα τιμών διατηρούνται για να επιτρέπουν την παρακολούθηση τιμών με την πάροδο του χρόνου.',
     'sources.disclaimer': 'Αποποίηση Ευθύνης',
     'sources.disclaimerDesc': 'Παρόλο που προσπαθούμε να διατηρούμε τα δεδομένα ακριβή και ενημερωμένα, οι τιμές μπορεί να αλλάξουν ανά πάσα στιγμή. Πάντα επαληθεύστε τις τιμές απευθείας με τον λιανοπωλητή πριν πάρετε αποφάσεις αγοράς. Αυτό το εργαλείο παρέχεται μόνο για ενημερωτικούς σκοπούς.',
 
@@ -116,7 +116,7 @@ const translations: Record<Language, Record<string, string>> = {
     'sources.ekalathiDesc': 'All price data is sourced from the official e-Kalathi platform, which is maintained by the Cyprus government. This platform was created to provide price transparency for basic consumer goods across supermarkets in Cyprus.',
     'sources.visitEkalathi': 'Visit e-Kalathi',
     'sources.dataCollection': 'Data Collection',
-    'sources.dataCollectionDesc': 'Price data is collected periodically through an automated scraper. The scraper fetches product categories, products, store information, and current prices from the e-Kalathi API. Historical price data is preserved to enable price tracking over time.',
+    'sources.dataCollectionDesc': 'Price data is collected daily through an automated scraper. The scraper fetches product categories, products, store information, and current prices from the e-Kalathi API. Historical price data is preserved to enable price tracking over time.',
     'sources.disclaimer': 'Disclaimer',
     'sources.disclaimerDesc': 'While we strive to keep the data accurate and up-to-date, prices may change at any time. Always verify prices directly with the retailer before making purchasing decisions. This tool is provided for informational purposes only.',
 

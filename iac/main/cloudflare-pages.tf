@@ -1,7 +1,7 @@
 resource "cloudflare_pages_project" "web" {
   account_id        = local.cloudflare_account_id
   name              = "${local.project_id}-web"
-  production_branch = "main"
+  production_branch = "deploy/web"
 
   source {
     type = "github"
@@ -9,7 +9,7 @@ resource "cloudflare_pages_project" "web" {
     config {
       owner                         = split("/", local.github_repo)[0]
       repo_name                     = split("/", local.github_repo)[1]
-      production_branch             = "main"
+      production_branch             = "deploy/web"
       deployments_enabled           = true
       production_deployment_enabled = true
       preview_deployment_setting    = "none"

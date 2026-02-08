@@ -6,7 +6,7 @@ on:
       - "*/v*"
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -55,3 +55,7 @@ jobs:
           tags: |
             ghcr.io/pheever/cy-price-watchdog/${{ steps.meta.outputs.service }}:${{ steps.meta.outputs.version }}
             ghcr.io/pheever/cy-price-watchdog/${{ steps.meta.outputs.service }}:latest
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.meta.outputs.service == 'web'
+        run: git push origin HEAD:refs/heads/deploy/web --force

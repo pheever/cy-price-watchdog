@@ -93,6 +93,19 @@ export interface ProductStats {
   byDistrict: DistrictStats[];
 }
 
+export interface CheapestProduct {
+  productId: string;
+  name: string;
+  nameEnglish: string;
+  minPrice: number;
+}
+
+export interface CategoryStats {
+  productCount: number;
+  scrapedAt: string | null;
+  cheapest: CheapestProduct[];
+}
+
 async function fetchApi<T>(endpoint: string): Promise<ApiResponse<T>> {
   const response = await fetch(`${API_BASE}${endpoint}`);
   return response.json() as Promise<ApiResponse<T>>;
@@ -121,5 +134,6 @@ export const api = {
     return fetchApi<Price[]>(`/products/${id}/prices${query ? `?${query}` : ''}`);
   },
   getProductStats: (id: string) => fetchApi<ProductStats>(`/products/${id}/stats`),
+  getCategoryStats: (id: string) => fetchApi<CategoryStats>(`/categories/${id}/stats`),
   getStores: () => fetchApi<Store[]>('/stores'),
 };

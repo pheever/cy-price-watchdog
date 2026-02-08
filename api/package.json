@@ -10,8 +10,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "prisma:generate": "prisma generate --schema=../database/prisma/schema.prisma",
-    "postinstall": "prisma generate --schema=../database/prisma/schema.prisma"
+    "prisma:generate": "prisma generate --schema=../database/prisma/schema.prisma && cp -r ../database/node_modules/.prisma node_modules/.prisma",
+    "postinstall": "prisma generate --schema=../database/prisma/schema.prisma && cp -r ../database/node_modules/.prisma node_modules/.prisma"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.0.0",

@@ -74,6 +74,7 @@ const translations: Record<Language, Record<string, string>> = {
     'categories.products': 'Προϊόντα',
     'categories.subcategories': 'Υποκατηγορίες',
     'categories.allCategories': 'Όλες οι Κατηγορίες',
+    'categories.cheapest': 'Φθηνότερα σε αυτή την κατηγορία',
 
     // Common
     'common.loading': 'Φόρτωση...',
@@ -145,6 +146,7 @@ const translations: Record<Language, Record<string, string>> = {
     'categories.products': 'Products',
     'categories.subcategories': 'Subcategories',
     'categories.allCategories': 'All Categories',
+    'categories.cheapest': 'Cheapest in this category',
 
     // Common
     'common.loading': 'Loading...',

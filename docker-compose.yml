@@ -139,13 +139,14 @@ services:
       context: .
       dockerfile: web/Dockerfile.dev
     container_name: web
+    hostname: web
     restart: unless-stopped
     ports:
       - "8080:5173"
     networks:
       - app-network
     environment:
-      - VITE_API_URL=http://api:3000
+      - API_PROXY_TARGET=http://api:3000
     volumes:
       - ./web/src:/app/src
       - ./web/public:/app/public

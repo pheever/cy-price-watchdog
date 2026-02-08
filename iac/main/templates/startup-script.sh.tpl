@@ -155,6 +155,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://data_reader:$${DATA_READER_PASS}@database:5432/$${POSTGRES_DB}
       - NODE_ENV=production
+      - CORS_ORIGIN=https://${domain}
     networks:
       - app-network
     depends_on:

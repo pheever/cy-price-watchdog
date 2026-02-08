@@ -27,7 +27,7 @@ resource "cloudflare_pages_project" "web" {
       environment_variables = {
         NODE_VERSION = "24"
         YARN_VERSION = "4"
-        VITE_API_URL = "https://api.${var.domain}"
+        VITE_API_URL = "https://api.${var.domain}/api"
       }
     }
   }

@@ -125,8 +125,8 @@ export default function ProductDetail() {
     return <div className="error">{t('product.notFound')}</div>;
   }
 
-  const productName = language === 'el' ? product.name : product.nameEnglish;
-  const productNameAlt = language === 'el' ? product.nameEnglish : product.name;
+  const productName = product.name;
+  const productNameAlt = product.nameEnglish;
   const categoryName = language === 'el' ? product.category?.name : product.category?.nameEnglish;
 
   const renderSortableHeader = (field: SortField, label: string, align: 'left' | 'right' = 'left') => (

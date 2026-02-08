@@ -13,7 +13,7 @@ resource "google_cloud_run_v2_job_iam_member" "scheduler_invoker" {
 resource "google_cloud_scheduler_job" "scraper" {
   name      = "${local.project_id}-scraper-schedule"
   region    = local.region
-  schedule  = "0 */6 * * *"
+  schedule  = "0 6 * * *"
   time_zone = "Europe/Athens"
 
   http_target {

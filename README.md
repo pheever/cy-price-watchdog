@@ -1,4 +1,4 @@
-# Cyprus Price Watchdog
+# Cyprus Price Watchdog https://pricewatchdog.cy
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![CI](https://github.com/pheever/cy-price-watchdog/actions/workflows/ci.yml/badge.svg)](https://github.com/pheever/cy-price-watchdog/actions/workflows/ci.yml)

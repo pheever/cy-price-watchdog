@@ -283,6 +283,10 @@ func (s *Scraper) scrapeProducts(ctx context.Context, categoryMap map[int]string
 
 	// Process queue with deferred retries
 	for len(queue) > 0 {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+
 		item := queue[0]
 		queue = queue[1:]
 
@@ -490,6 +494,10 @@ func (s *Scraper) scrapePrices(ctx context.Context, productMap map[int]string, r
 
 	// Process queue with deferred retries
 	for len(queue) > 0 {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+
 		item := queue[0]
 		queue = queue[1:]
 
@@ -561,6 +569,10 @@ func (s *Scraper) Run(ctx context.Context) error {
 	s.metrics.RecordCount("regions", len(regions), nil)
 	logger.Info("fetched regions", "count", len(regions))
 
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
 	// Step 2: Scrape categories
 	startCategories := time.Now()
 	categoryMap, err := s.scrapeCategories(ctx)
@@ -570,6 +582,10 @@ func (s *Scraper) Run(ctx context.Context) error {
 	s.metrics.RecordDuration("categories", time.Since(startCategories), nil)
 	s.metrics.RecordCount("categories", len(categoryMap), nil)
 
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
 	// Step 3: Scrape products
 	startProducts := time.Now()
 	productMap, err := s.scrapeProducts(ctx, categoryMap)
@@ -578,6 +594,10 @@ func (s *Scraper) Run(ctx context.Context) error {
 	}
 	s.metrics.RecordDuration("products", time.Since(startProducts), nil)
 	s.metrics.RecordCount("products", len(productMap), nil)
+
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
 
 	// Step 4: Scrape prices from retail branches (per region)
 	startPrices := time.Now()

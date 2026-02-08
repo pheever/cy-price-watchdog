@@ -49,6 +49,7 @@ resource "google_compute_instance" "vm" {
     startup-script = templatefile("${path.module}/templates/startup-script.sh.tpl", {
       project_id        = local.project_id
       github_repo       = local.github_repo
+      domain            = var.domain
       api_image         = "ghcr.io/${local.github_repo}/api:${var.image_tag}"
       postgres_image    = "postgres:15"
       timescaledb_image = "timescale/timescaledb:latest-pg15"

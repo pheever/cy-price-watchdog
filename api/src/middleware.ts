@@ -6,7 +6,7 @@ function getAllowedOrigins(): string[] {
   if (domain) {
     return [domain, `https://www.${domain.replace('https://', '')}`];
   }
-  return ['http://localhost:8080', 'http://localhost:5173'];
+  return ['http://web:8080', 'http://web:5173', 'http://localhost:8080', 'http://localhost:5173'];
 }
 
 const ALLOWED_ORIGINS = getAllowedOrigins();

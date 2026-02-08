@@ -9,7 +9,8 @@ stop:
 	docker compose down
 
 restart:
-	docker compose restart $(SERVICE)
+	docker compose down $(SERVICE)
+	docker compose up -d $(SERVICE)
 
 watch:
 	docker compose watch

@@ -15,3 +15,13 @@ output "scraper_job_name" {
   value       = google_cloud_run_v2_job.scraper.name
   sensitive   = true
 }
+
+output "project_id" {
+  description = "GCP project ID"
+  value       = local.project_id
+}
+
+output "zone" {
+  description = "GCE zone"
+  value       = var.zone
+}

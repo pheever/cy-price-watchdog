@@ -90,6 +90,7 @@ SSH into the VM via IAP:
 
 ```bash
 gcloud compute ssh $(terraform output -raw vm_name) \
+  --project=$(terraform output -raw project_id) \
   --zone=$(terraform output -raw zone) \
   --tunnel-through-iap
 ```

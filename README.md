@@ -7,6 +7,9 @@
 [![Node.js](https://img.shields.io/badge/Node.js-24-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Terraform](https://img.shields.io/badge/Terraform-844FBA?logo=terraform&logoColor=white)](https://www.terraform.io/)
 
+---
+![Alt text](./web/public/logo.png "Cyprus Price Watchdog")
+
 Since Cyprus government [eKalathi](https://www.e-kalathi.gov.cy/) release, consumers are able to compare prices. But the consumers are unable to monitor the increase of the prices relative to other prices or the inflation.
 
 This tool comes to serve this exact purpose, to monitor the price fluctuation over time and compare with the inflation and commodities that affect inflation.

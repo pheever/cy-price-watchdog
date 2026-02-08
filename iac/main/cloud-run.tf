@@ -61,7 +61,7 @@ resource "google_cloud_run_v2_job" "scraper" {
   template {
     template {
       service_account = local.bootstrap.cloudrun_sa_email
-      timeout         = "300s"
+      timeout         = "1800s"
 
       containers {
         image = "${local.region}-docker.pkg.dev/${local.project_id}/${google_artifact_registry_repository.ghcr.repository_id}/${local.github_repo}/scraper:${var.image_tag}"

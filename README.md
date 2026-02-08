@@ -16,7 +16,7 @@ This tool comes to serve this exact purpose, to monitor the price fluctuation ov
 
 ## How it works
 
-The scraper fetches product prices from the government's eKalathi API every 6 hours and stores them in PostgreSQL. The API server exposes the data through a REST API, and the web frontend provides a user-friendly interface for browsing and comparing prices. Metrics are collected via Telegraf into TimescaleDB and visualized with Grafana.
+The scraper fetches product prices from the government's eKalathi API once a day and stores them in PostgreSQL. The API server exposes the data through a REST API, and the web frontend provides a user-friendly interface for browsing and comparing prices. Metrics are collected via Telegraf into TimescaleDB and visualized with Grafana.
 
 ## Local Development
 

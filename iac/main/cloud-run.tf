@@ -88,7 +88,7 @@ resource "google_cloud_run_v2_job" "scraper" {
           }
         }
       }
-
+      
       vpc_access {
         connector = google_vpc_access_connector.connector.id
         egress    = "ALL_TRAFFIC"

@@ -1,3 +1,19 @@
+resource "cloudflare_record" "web" {
+  zone_id = data.cloudflare_zone.main.id
+  name    = "@"
+  content = "${cloudflare_pages_project.web.name}.pages.dev"
+  type    = "CNAME"
+  proxied = true
+}
+
+resource "cloudflare_record" "web_www" {
+  zone_id = data.cloudflare_zone.main.id
+  name    = "www"
+  content = "${cloudflare_pages_project.web.name}.pages.dev"
+  type    = "CNAME"
+  proxied = true
+}
+
 resource "cloudflare_record" "api" {
   zone_id = data.cloudflare_zone.main.id
   name    = "api"

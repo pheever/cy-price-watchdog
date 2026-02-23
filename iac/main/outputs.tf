@@ -10,12 +10,6 @@ output "vm_internal_ip" {
   sensitive   = true
 }
 
-output "scraper_job_name" {
-  description = "Cloud Run scraper job name"
-  value       = google_cloud_run_v2_job.scraper.name
-  sensitive   = true
-}
-
 output "project_id" {
   description = "GCP project ID"
   value       = local.project_id

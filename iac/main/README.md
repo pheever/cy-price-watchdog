@@ -1,6 +1,6 @@
 # Main Infrastructure Module
 
-Provisions the runtime infrastructure for Cyprus Price Watchdog: a private VPC with a GCE VM running services via Docker Compose, Cloudflare Tunnel for ingress, Cloud Run Job for the scraper, and Cloudflare Pages for the web frontend.
+Provisions the runtime infrastructure for Cyprus Price Watchdog: a private VPC with a GCE VM running services via Docker Compose, Cloudflare Tunnel for ingress, and Cloudflare Pages for the web frontend.
 
 > **Prerequisite**: The [bootstrap](../bootstrap/) module must be applied first — it creates the GCP project, service accounts, WIF, secrets, and Cloudflare API token that this module depends on.
 
@@ -17,11 +17,6 @@ Provisions the runtime infrastructure for Cyprus Price Watchdog: a private VPC w
 | Firewall (IAP SSH) | `{project_id}-allow-iap-ssh` | SSH via IAP (`35.235.240.0/20`) |
 | Service Account | `vm-runtime@` | VM runtime identity |
 | GCE VM | `{project_id}-vm` | Docker Compose host (no public IP) |
-| Artifact Registry | `ghcr` | Remote repo proxying ghcr.io |
-| VPC Access Connector | `vpc-conn` | Cloud Run → VPC connectivity |
-| Cloud Run Job | `{project_id}-scraper` | Scheduled scraper execution |
-| Service Account | `cloud-scheduler@` | Scheduler invocation identity |
-| Cloud Scheduler | `{project_id}-scraper-schedule` | Cron trigger (`0 */6 * * *`) |
 
 ### Cloudflare
 
@@ -35,14 +30,17 @@ Provisions the runtime infrastructure for Cyprus Price Watchdog: a private VPC w
 
 ### VM Services (Docker Compose)
 
-| Service | Image | Port |
-|---------|-------|------|
-| `database` | `postgres:15` | 5432 |
-| `timescaledb` | `timescale/timescaledb:latest-pg15` | 5432 (internal) |
-| `api` | `ghcr.io/{repo}/api:{tag}` | 3000 |
-| `telegraf` | `telegraf:latest` | 8186 |
-| `grafana` | `grafana/grafana:latest` | 3000 (internal) |
-| `cloudflared` | `cloudflare/cloudflared:latest` | — |
+| Service | Image | Port | Started by |
+|---------|-------|------|------------|
+| `database` | `postgres:15` | 5432 | `compose up -d` |
+| `timescaledb` | `timescale/timescaledb:latest-pg15` | 5432 (internal) | `compose up -d` |
+| `api` | `ghcr.io/{repo}/api:{tag}` | 3000 | `compose up -d` |
+| `telegraf` | `telegraf:latest` | 8186 | `compose up -d` |
+| `grafana` | `grafana/grafana:latest` | 3000 (internal) | `compose up -d` |
+| `cloudflared` | `cloudflare/cloudflared:latest` | — | `compose up -d` |
+| `scraper` | `ghcr.io/{repo}/scraper:{tag}` | — | cron (`0 6 * * *`) |
+
+The `scraper` service uses `profiles: [scraper]` so it is excluded from `docker compose up -d` and runs only when invoked explicitly (via cron or manually).
 
 ## Prerequisites
 
@@ -74,7 +72,6 @@ make apply
 | `vm_machine_type` | `string` | `e2-small` | no | VM machine type |
 | `vm_disk_size_gb` | `number` | `30` | no | Boot disk size (GB) |
 | `subnet_cidr` | `string` | `10.0.0.0/24` | no | Private subnet CIDR |
-| `vpc_connector_cidr` | `string` | `10.8.0.0/28` | no | VPC connector CIDR |
 
 ## Outputs
 
@@ -82,7 +79,8 @@ make apply
 |------|-------------|
 | `vm_name` | Name of the GCE VM |
 | `vm_internal_ip` | Internal IP of the VM |
-| `scraper_job_name` | Cloud Run scraper job name |
+| `project_id` | GCP project ID |
+| `zone` | GCE zone |
 
 ## Operations
 
@@ -98,8 +96,22 @@ gcloud compute ssh $(terraform output -raw vm_name) \
 Trigger the scraper manually:
 
 ```bash
-gcloud run jobs execute $(terraform output -raw scraper_job_name) \
-  --region=europe-west1
+# After SSH into VM
+docker compose -f /opt/app/docker-compose.yml run --rm --no-deps scraper
+```
+
+Check cron registration:
+
+```bash
+# After SSH into VM
+cat /etc/cron.d/scraper
+```
+
+Check cron logs:
+
+```bash
+# After SSH into VM
+tail -f /var/log/scraper.log
 ```
 
 Check VM containers:

@@ -10,6 +10,7 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 systemctl enable --now docker
+timedatectl set-timezone Europe/Athens
 
 # --- 2. Fetch secrets from Secret Manager ---
 fetch_secret() {
@@ -181,6 +182,24 @@ services:
       api:
         condition: service_started
 
+  scraper:
+    image: ${scraper_image}
+    container_name: scraper
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      - TZ=Europe/Athens
+      - DATABASE_URL=postgresql://data_writer:$${DATA_WRITER_PASS}@database:5432/$${POSTGRES_DB}
+      - METRICS_URL=http://telegraf:8186/write
+    networks:
+      - app-network
+    profiles:
+      - scraper
+    depends_on:
+      - database
+      - telegraf
+
   grafana:
     image: ${grafana_image}
     container_name: grafana
@@ -238,6 +257,15 @@ DAEMONEOF
 
 systemctl restart docker
 
-# --- 8. Start services ---
+# --- 8. Cron job for scraper ---
+cat > /etc/cron.d/scraper <<'CRONEOF'
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+0 6 * * * root docker compose -f /opt/app/docker-compose.yml run --rm --no-deps scraper >> /var/log/scraper.log 2>&1
+CRONEOF
+chmod 644 /etc/cron.d/scraper
+
+# --- 9. Start services ---
 cd /opt/app
 docker compose up -d

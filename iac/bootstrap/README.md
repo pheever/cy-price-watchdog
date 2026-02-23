@@ -7,10 +7,9 @@ One-time Terraform module that creates the GCP foundation required by the main `
 | Resource | Description |
 |----------|-------------|
 | GCP Project | Under org or folder, with billing linked |
-| 11 GCP APIs | Compute, IAM, Cloud Run, Secret Manager, etc. |
+| 9 GCP APIs | Compute, IAM, Secret Manager, etc. |
 | GCS Bucket | `${project_id}-tfstate` for remote state (versioned) |
 | Terraform SA | `terraform@` — impersonated by main module |
-| Cloud Run SA | `cloudrun-scraper@` — scraper runtime identity |
 | GitHub Actions SA | `github-actions@` — CI/CD via WIF |
 | WIF Pool + Provider | OIDC federation for GitHub Actions |
 | 10 Secrets | Secret Manager containers (ghcr-token populated, rest managed by main module) |

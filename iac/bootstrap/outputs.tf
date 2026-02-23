@@ -19,8 +19,3 @@ output "github_repo" {
   value       = var.github_repo
 }
 
-output "cloudrun_sa_email" {
-  description = "Cloud Run scraper service account email"
-  value       = google_service_account.cloudrun.email
-  sensitive   = true
-}

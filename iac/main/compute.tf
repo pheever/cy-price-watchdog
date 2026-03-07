@@ -57,6 +57,7 @@ resource "google_compute_instance" "vm" {
       grafana_image     = "grafana/grafana:latest"
       cloudflared_image = "cloudflare/cloudflared:latest"
       scraper_image     = "ghcr.io/${local.github_repo}/scraper:${var.image_tag}"
+      migrate_image     = "ghcr.io/${local.github_repo}/migrate:${var.image_tag}"
       tunnel_token      = cloudflare_zero_trust_tunnel_cloudflared.main.tunnel_token
     })
   }

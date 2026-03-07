@@ -1,0 +1,150 @@
+name: IaC
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['iac/main/**']
+  push:
+    paths: ['iac/main/**']
+
+jobs:
+  lint:
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main'
+    name: Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: iac/main
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: Format check
+        run: terraform fmt -check
+      - name: Init
+        run: terraform init -backend=false
+      - name: Validate
+        run: terraform validate
+
+  plan:
+    if: github.event_name == 'pull_request'
+    name: Plan
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: iac/main
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.IAC_WIF_SA_EMAIL }}
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+
+      - name: Format check
+        run: terraform fmt -check
+
+      - name: Init
+        run: terraform init
+
+      - name: Validate
+        run: terraform validate
+
+      - name: Plan
+        run: terraform plan -out=tfplan 2>&1 | tee /tmp/plan-output.txt
+
+      - name: Blast radius check
+        run: |
+          terraform show -json tfplan > /tmp/tfplan.json
+
+          AUTHZ=$(opa eval \
+            --data $GITHUB_WORKSPACE/iac/policy/main.rego \
+            --input /tmp/tfplan.json \
+            --format raw \
+            'data.terraform.analysis.authz')
+
+          if [ "$AUTHZ" != "true" ]; then
+            echo "Policy check failed. Deny reasons:"
+            opa eval \
+              --data $GITHUB_WORKSPACE/iac/policy/main.rego \
+              --input /tmp/tfplan.json \
+              --format raw \
+              'data.terraform.analysis.deny'
+            rm /tmp/tfplan.json
+            exit 1
+          fi
+
+          rm /tmp/tfplan.json
+          echo "Policy check passed"
+
+      - name: Upload plan to GCS
+        run: gsutil cp tfplan gs://${{ vars.GCS_TFSTATE_BUCKET }}/plans/pr-${{ github.event.pull_request.number }}/tfplan
+
+      - name: Post plan to PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const raw = fs.readFileSync('/tmp/plan-output.txt', 'utf8');
+            const output = raw.length > 65000 ? raw.slice(0, 65000) + '\n\n_(truncated)_' : raw;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Terraform Plan\n\`\`\`\n${output}\n\`\`\``,
+            });
+
+  apply:
+    if: github.event_name == 'push'
+    name: Apply
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: read
+    defaults:
+      run:
+        working-directory: iac/main
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.IAC_WIF_SA_EMAIL }}
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Find merged PR number
+        id: pr
+        run: |
+          PR_NUMBER=$(gh api repos/${{ github.repository }}/commits/${{ github.sha }}/pulls \
+            --jq '.[0].number')
+          if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
+            echo "No PR found for commit ${{ github.sha }}. Direct pushes without a PR are not supported."
+            exit 1
+          fi
+          echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Download plan from GCS
+        run: gsutil cp gs://${{ vars.GCS_TFSTATE_BUCKET }}/plans/pr-${{ steps.pr.outputs.number }}/tfplan tfplan
+
+      - name: Init
+        run: terraform init
+
+      - name: Apply
+        run: terraform apply tfplan

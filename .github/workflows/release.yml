@@ -20,7 +20,7 @@ jobs:
           SERVICE="${TAG%%/*}"
           VERSION="${TAG#*/v}"
 
-          if [[ ! "$SERVICE" =~ ^(api|scraper|web)$ ]]; then
+          if [[ ! "$SERVICE" =~ ^(api|scraper|web|database)$ ]]; then
             echo "::error::Unknown service: $SERVICE"
             exit 1
           fi
@@ -28,10 +28,18 @@ jobs:
           echo "service=$SERVICE" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-          if [ "$SERVICE" = "api" ]; then
+          if [ "$SERVICE" = "database" ]; then
+            echo "image=migrate" >> "$GITHUB_OUTPUT"
             echo "context=." >> "$GITHUB_OUTPUT"
+            echo "file=database/Dockerfile" >> "$GITHUB_OUTPUT"
+          elif [ "$SERVICE" = "api" ]; then
+            echo "image=api" >> "$GITHUB_OUTPUT"
+            echo "context=." >> "$GITHUB_OUTPUT"
+            echo "file=api/Dockerfile" >> "$GITHUB_OUTPUT"
           else
+            echo "image=$SERVICE" >> "$GITHUB_OUTPUT"
             echo "context=$SERVICE" >> "$GITHUB_OUTPUT"
+            echo "file=$SERVICE/Dockerfile" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout
@@ -48,13 +56,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ steps.meta.outputs.context }}
-          file: ${{ steps.meta.outputs.service }}/Dockerfile
+          file: ${{ steps.meta.outputs.file }}
           push: true
           build-args: |
             ${{ steps.meta.outputs.service == 'api' && format('DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy') || '' }}
           tags: |
-            ghcr.io/pheever/cy-price-watchdog/${{ steps.meta.outputs.service }}:${{ steps.meta.outputs.version }}
-            ghcr.io/pheever/cy-price-watchdog/${{ steps.meta.outputs.service }}:latest
+            ghcr.io/pheever/cy-price-watchdog/${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}
+            ghcr.io/pheever/cy-price-watchdog/${{ steps.meta.outputs.image }}:latest
 
       - name: Deploy to Cloudflare Pages
         if: steps.meta.outputs.service == 'web'

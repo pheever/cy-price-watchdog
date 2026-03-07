@@ -5,12 +5,6 @@ variable "domain" {
 }
 
 
-variable "zone" {
-  description = "GCE zone"
-  type        = string
-  default     = "europe-west1-b"
-}
-
 variable "image_tag" {
   description = "Container image tag"
   type        = string
@@ -23,14 +17,3 @@ variable "subnet_cidr" {
   default     = "10.0.0.0/24"
 }
 
-variable "vm_machine_type" {
-  description = "VM machine type"
-  type        = string
-  default     = "e2-small"
-}
-
-variable "vm_disk_size_gb" {
-  description = "Boot disk size in GB"
-  type        = number
-  default     = 30
-}

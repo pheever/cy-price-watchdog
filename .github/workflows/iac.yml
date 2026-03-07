@@ -63,11 +63,17 @@ jobs:
 
       - name: Plan
         id: plan
-        run: terraform plan -out=tfplan 2>&1 | tee /tmp/plan-output.txt
+        run: terraform plan -no-color -out=tfplan 2>&1 | tee /tmp/plan-output.txt
 
       - name: Blast radius check
         run: |
           terraform show -json tfplan > /tmp/tfplan.json
+
+          SCORE=$(opa eval \
+            --data $GITHUB_WORKSPACE/iac/policy/main.rego \
+            --input /tmp/tfplan.json \
+            --format raw \
+            'data.terraform.analysis.score')
 
           AUTHZ=$(opa eval \
             --data $GITHUB_WORKSPACE/iac/policy/main.rego \
@@ -75,13 +81,20 @@ jobs:
             --format raw \
             'data.terraform.analysis.authz')
 
+          echo "Blast radius score: $SCORE / 30"
+
           if [ "$AUTHZ" != "true" ]; then
-            echo "Policy check failed. Deny reasons:"
-            opa eval \
+            DENY=$(opa eval \
               --data $GITHUB_WORKSPACE/iac/policy/main.rego \
               --input /tmp/tfplan.json \
               --format raw \
-              'data.terraform.analysis.deny'
+              'data.terraform.analysis.deny')
+
+            if [ "$DENY" != "[]" ]; then
+              echo "Hard deny violations:"
+              echo "$DENY"
+            fi
+
             rm /tmp/tfplan.json
             exit 1
           fi

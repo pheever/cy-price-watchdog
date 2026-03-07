@@ -43,3 +43,26 @@ resource "google_project_iam_member" "github_actions" {
   role    = each.value
   member  = "serviceAccount:${google_service_account.github_actions.email}"
 }
+
+# IaC CI SA — Terraform plan/apply for iac/main via Workload Identity Federation
+resource "google_service_account" "iac_ci" {
+  project      = google_project.this.project_id
+  account_id   = "iac-ci"
+  display_name = "IaC CI"
+
+  depends_on = [google_project_service.services]
+}
+
+resource "google_project_iam_member" "iac_ci" {
+  for_each = toset([
+    "roles/compute.admin",
+    "roles/iam.serviceAccountAdmin",
+    "roles/iam.serviceAccountUser",
+    "roles/resourcemanager.projectIamAdmin",
+    "roles/secretmanager.admin",
+  ])
+
+  project = google_project.this.project_id
+  role    = each.value
+  member  = "serviceAccount:${google_service_account.iac_ci.email}"
+}

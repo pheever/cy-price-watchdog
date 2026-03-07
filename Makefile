@@ -35,7 +35,7 @@ reset:
 
 # --- Versioning ---
 
-VALID_SERVICES := api scraper web
+VALID_SERVICES := api scraper web database
 VALID_BUMPS := major minor patch
 
 BUMP := patch
@@ -44,7 +44,7 @@ BUMP := patch
 
 _validate-service:
 ifndef SERVICE
-	$(error SERVICE is required (api|scraper|web))
+	$(error SERVICE is required (api|scraper|web|database))
 endif
 ifeq ($(filter $(SERVICE),$(VALID_SERVICES)),)
 	$(error SERVICE must be one of: $(VALID_SERVICES))

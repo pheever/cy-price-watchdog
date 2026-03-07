@@ -1,4 +1,4 @@
-.PHONY: install generate migrate migrate-dev studio push db-reset clean
+.PHONY: install generate migrate migrate-dev studio push db-reset clean build run
 
 include ../.env
 export
@@ -27,6 +27,12 @@ push:
 
 db-reset:
 	DATABASE_URL=$(DB) yarn prisma migrate reset --force
+
+build:
+	docker build -t $(BUILD_IMG):$(BUILD_IMG_TAG) -f $(CURDIR)/Dockerfile $(CURDIR)/..
+
+run: build
+	docker compose -f $(CURDIR)/../docker-compose.yml run --rm migrate
 
 clean:
 	rm -rf node_modules

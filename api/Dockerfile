@@ -1,6 +1,8 @@
 FROM node:24-alpine AS base
 RUN corepack enable && corepack prepare yarn@4.12.0 --activate
 
+FROM ghcr.io/pheever/cy-price-watchdog/migrate:latest AS migrations
+
 FROM base AS builder
 WORKDIR /app
 
@@ -13,8 +15,8 @@ RUN yarn install --immutable --mode=skip-build
 
 COPY api/ .
 # Copy Prisma schema from database module and config
-COPY database/prisma ./prisma
-COPY database/prisma.config.ts ./prisma.config.ts
+COPY --from=migrations /app/prisma ./prisma
+COPY --from=migrations /app/prisma.config.ts ./prisma.config.ts
 
 # Generate Prisma client
 RUN yarn prisma generate --schema=./prisma/schema.prisma

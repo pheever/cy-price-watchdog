@@ -51,10 +51,23 @@ The `scraper` service uses `profiles: [scraper]` so it is excluded from `docker 
 
 ## Usage
 
+1. Authenticate with Google Cloud:
+
+```bash
+gcloud auth login
+gcloud auth application-default login
+```
+
+1. Configure variables:
+
 ```bash
 cp terraform.tfvars.example terraform.tfvars
 # Edit terraform.tfvars with your values
+```
 
+1. Initialize and apply:
+
+```bash
 make init
 make plan
 make apply

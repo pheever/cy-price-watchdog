@@ -30,6 +30,20 @@ One-time Terraform module that creates the GCP foundation required by the main `
 
 ## Setup
 
+1. Authenticate with Google Cloud:
+
+```bash
+gcloud auth login
+gcloud auth application-default login
+```
+
+1. Copy and fill in credentials:
+
+```bash
+cp .env.example .env
+# Edit .env with your values
+```
+
 1. Copy and configure variables:
 
 ```bash

@@ -33,6 +33,31 @@ Or set `DATABASE_URL` in the root `.env` file (see root README).
 
 Users are created by `init/001_users.sql`, executed by the `migrate` service in docker-compose. Passwords are injected from the `.env` file via `psql -v` flags.
 
+## Docker Image
+
+The `migrate` service is a self-contained Docker image (`ghcr.io/pheever/cy-price-watchdog/migrate`) that runs Prisma migrations and user init SQL on startup.
+
+Build and run locally (requires the `database` service to be healthy):
+
+```bash
+# From project root
+docker compose up database
+# Then:
+make build   # builds the image
+make run     # runs the migrate container against the local database
+```
+
+Environment variables read at runtime:
+
+| Variable | Description |
+|----------|-------------|
+| `DB_HOST` | Database hostname (default: `database`) |
+| `POSTGRES_USER` | Postgres superuser |
+| `POSTGRES_PASSWORD` | Postgres superuser password |
+| `POSTGRES_DB` | Database name |
+| `DATA_WRITER_PASS` | Password for `data_writer` role |
+| `DATA_READER_PASS` | Password for `data_reader` role |
+
 ## Commands
 
 | Command | Description |
@@ -43,6 +68,8 @@ Users are created by `init/001_users.sql`, executed by the `migrate` service in 
 | `make migrate-dev` | Create and run migrations (development) |
 | `make studio` | Open Prisma Studio GUI |
 | `make push` | Push schema to database without migrations |
+| `make build` | Build the migrate Docker image locally |
+| `make run` | Build and run the migrate container via docker compose |
 
 ## Schema
 

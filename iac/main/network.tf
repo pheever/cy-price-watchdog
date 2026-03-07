@@ -18,7 +18,7 @@ resource "google_compute_router" "router" {
 }
 
 resource "google_compute_router_nat" "nat" {
-  name        = "${local.project_id}-nat"
+  name                               = "${local.project_id}-nat"
   router                             = google_compute_router.router.name
   region                             = local.region
   nat_ip_allocate_option             = "AUTO_ONLY"

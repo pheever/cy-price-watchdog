@@ -1,5 +1,5 @@
 variable "domain" {
-  description = "Domain name"
+  description = "Root domain name"
   type        = string
   default     = "pricewatchdog.cy"
 }

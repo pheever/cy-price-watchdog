@@ -17,9 +17,9 @@ resource "cloudflare_pages_project" "web" {
   }
 
   build_config {
-    build_command       = "yarn install && yarn build"
-    destination_dir     = "dist"
-    root_dir            = "web"
+    build_command   = "yarn install && yarn build"
+    destination_dir = "dist"
+    root_dir        = "web"
   }
 
   deployment_configs {

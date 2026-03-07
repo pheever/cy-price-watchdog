@@ -55,183 +55,25 @@ METRICS_READER_PASS=$METRICS_READER_PASS
 
 GF_SECURITY_ADMIN_USER=admin
 GF_SECURITY_ADMIN_PASSWORD=$GF_SECURITY_ADMIN_PASSWORD
+
+API_IMAGE=${api_image}
+POSTGRES_IMAGE=${postgres_image}
+MIGRATE_IMAGE=${migrate_image}
+TIMESCALEDB_IMAGE=${timescaledb_image}
+TELEGRAF_IMAGE=${telegraf_image}
+GRAFANA_IMAGE=${grafana_image}
+CLOUDFLARED_IMAGE=${cloudflared_image}
+SCRAPER_IMAGE=${scraper_image}
+
+DOMAIN=${domain}
+TUNNEL_TOKEN=${tunnel_token}
 ENVEOF
 
 chmod 600 /opt/app/.env
 
 # --- 6. Write production docker-compose.yml ---
 cat > /opt/app/docker-compose.yml <<'COMPOSEEOF'
-services:
-  database:
-    image: ${postgres_image}
-    container_name: database
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - /opt/app/repo/database/init:/docker-entrypoint-initdb.d:ro
-    ports:
-      - "5432:5432"
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  migrate:
-    image: ${migrate_image}
-    container_name: migrate
-    env_file:
-      - .env
-    networks:
-      - app-network
-    restart: "no"
-    depends_on:
-      database:
-        condition: service_healthy
-
-  timescaledb:
-    image: ${timescaledb_image}
-    container_name: timescaledb
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      - POSTGRES_USER=$${METRICS_USER}
-      - POSTGRES_PASSWORD=$${METRICS_PASSWORD}
-      - POSTGRES_DB=$${METRICS_DB}
-    volumes:
-      - timescaledb_data:/var/lib/postgresql/data
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${METRICS_USER} -d $${METRICS_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    depends_on:
-      database:
-        condition: service_healthy
-
-  metrics-migrate:
-    image: ${postgres_image}
-    container_name: metrics-migrate
-    env_file:
-      - .env
-    volumes:
-      - /opt/app/repo/metrics/schema:/scripts:ro
-    networks:
-      - app-network
-    environment:
-      - PGPASSWORD=$${METRICS_PASSWORD}
-    command: >
-      sh -c "for f in /scripts/*.sql; do
-               echo \"Running $$f...\";
-               psql -h timescaledb -U $${METRICS_USER} -d $${METRICS_DB} -v metrics_writer_pass=$${METRICS_WRITER_PASS} -v metrics_reader_pass=$${METRICS_READER_PASS} -f $$f;
-             done"
-    restart: "no"
-    depends_on:
-      timescaledb:
-        condition: service_healthy
-
-  api:
-    image: ${api_image}
-    container_name: api
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      - DATABASE_URL=postgresql://data_reader:$${DATA_READER_PASS}@database:5432/$${POSTGRES_DB}
-      - NODE_ENV=production
-      - CORS_ORIGIN=https://${domain}
-    networks:
-      - app-network
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-
-  telegraf:
-    image: ${telegraf_image}
-    container_name: telegraf
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - /opt/app/repo/metrics/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
-      - telegraf_logs:/var/log/telegraf
-    ports:
-      - "8186:8186"
-    networks:
-      - app-network
-    depends_on:
-      metrics-migrate:
-        condition: service_completed_successfully
-      api:
-        condition: service_started
-
-  scraper:
-    image: ${scraper_image}
-    container_name: scraper
-    restart: "no"
-    env_file:
-      - .env
-    environment:
-      - TZ=Europe/Athens
-      - DATABASE_URL=postgresql://data_writer:$${DATA_WRITER_PASS}@database:5432/$${POSTGRES_DB}
-      - METRICS_URL=http://telegraf:8186/write
-    networks:
-      - app-network
-    profiles:
-      - scraper
-    depends_on:
-      - database
-      - telegraf
-
-  grafana:
-    image: ${grafana_image}
-    container_name: grafana
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      - GF_SECURITY_ADMIN_USER=$${GF_SECURITY_ADMIN_USER}
-      - GF_SECURITY_ADMIN_PASSWORD=$${GF_SECURITY_ADMIN_PASSWORD}
-      - GF_USERS_ALLOW_SIGN_UP=false
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - /opt/app/repo/metrics/grafana/provisioning:/etc/grafana/provisioning:ro
-      - /opt/app/repo/metrics/grafana/dashboards:/var/lib/grafana/dashboards:ro
-    networks:
-      - app-network
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-      metrics-migrate:
-        condition: service_completed_successfully
-
-  cloudflared:
-    image: ${cloudflared_image}
-    container_name: cloudflared
-    restart: unless-stopped
-    command: tunnel run --token ${tunnel_token}
-    networks:
-      - app-network
-    depends_on:
-      - api
-      - grafana
-
-networks:
-  app-network:
-    driver: bridge
-
-volumes:
-  pgdata:
-  timescaledb_data:
-  grafana_data:
-  telegraf_logs:
+${compose_content}
 COMPOSEEOF
 
 # --- 7. Docker log rotation ---

@@ -62,6 +62,7 @@ jobs:
         run: terraform validate
 
       - name: Plan
+        id: plan
         run: terraform plan -out=tfplan 2>&1 | tee /tmp/plan-output.txt
 
       - name: Blast radius check
@@ -92,11 +93,12 @@ jobs:
         run: gsutil cp tfplan gs://${{ vars.GCS_TFSTATE_BUCKET }}/plans/pr-${{ github.event.pull_request.number }}/tfplan
 
       - name: Post plan to PR
-        if: always()
+        if: always() && steps.plan.conclusion != 'skipped'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
+            if (!fs.existsSync('/tmp/plan-output.txt')) { return; }
             const raw = fs.readFileSync('/tmp/plan-output.txt', 'utf8');
             const output = raw.length > 65000 ? raw.slice(0, 65000) + '\n\n_(truncated)_' : raw;
             github.rest.issues.createComment({

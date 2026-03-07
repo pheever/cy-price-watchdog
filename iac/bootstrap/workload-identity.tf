@@ -34,9 +34,8 @@ resource "google_service_account_iam_member" "github_actions_wif" {
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repo}"
 }
 
-# Restrict iac-ci SA to tokens issued specifically by the iac.yml workflow file
 resource "google_service_account_iam_member" "iac_ci_wif" {
   service_account_id = google_service_account.iac_ci.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.job_workflow_ref/${var.github_repo}/.github/workflows/iac.yml@refs/heads/main"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repo}"
 }

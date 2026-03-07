@@ -65,8 +65,8 @@ services:
       - PGPASSWORD=${METRICS_PASSWORD}
     command: >
       sh -c "for f in /scripts/*.sql; do
-               echo \"Running $f...\";
-               psql -h timescaledb -U ${METRICS_USER} -d ${METRICS_DB} -v metrics_writer_pass=${METRICS_WRITER_PASS} -v metrics_reader_pass=${METRICS_READER_PASS} -f $f;
+               echo \"Running $$f...\";
+               psql -h timescaledb -U ${METRICS_USER} -d ${METRICS_DB} -v metrics_writer_pass=${METRICS_WRITER_PASS} -v metrics_reader_pass=${METRICS_READER_PASS} -f $$f;
              done"
     restart: "no"
     depends_on:

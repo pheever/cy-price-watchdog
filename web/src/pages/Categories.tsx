@@ -4,8 +4,13 @@ import { api, type Category, type Product } from '../lib/api';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
+function primaryName(item: { name: string; nameEnglish?: string | null }, language: string): string {
+  return language === 'en' ? (item.nameEnglish ?? item.name) : item.name;
+}
+
+
 function SearchResults({ query }: { query: string }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   useDocumentTitle(`Search: "${query}"`);
   const { data: products, loading, error } = useApi(
     () => api.getProducts({ search: query, limit: 50 }),
@@ -36,8 +41,7 @@ function SearchResults({ query }: { query: string }) {
         <div className="grid grid-2">
           {products.map((product: Product) => (
             <Link key={product.id} to={`/products/${product.id}`} className="card" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
-              <div style={{ fontWeight: 500 }}>{product.name}</div>
-              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{product.nameEnglish}</div>
+              <div style={{ fontWeight: 500 }}>{primaryName(product, language)}</div>
               {product.unit && (
                 <div style={{ fontSize: '0.75rem', color: 'var(--color-secondary)', marginTop: '0.25rem' }}>
                   {product.unit}
@@ -54,12 +58,12 @@ function SearchResults({ query }: { query: string }) {
 }
 
 function CategoryDetail({ id }: { id: string }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: category, loading, error } = useApi(
     () => api.getCategory(id),
     [id]
   );
-  useDocumentTitle(category?.nameEnglish ?? undefined);
+  useDocumentTitle(category ? primaryName(category, language) : undefined);
   const isSubcategory = category && (!category.children || category.children.length === 0);
   const { data: stats } = useApi(
     () => isSubcategory ? api.getCategoryStats(id) : Promise.resolve({ data: null, error: null, meta: null }),
@@ -85,14 +89,14 @@ function CategoryDetail({ id }: { id: string }) {
         {category.parent && (
           <>
             {' / '}
-            <Link to={`/categories/${category.parent.id}`}>{category.parent.nameEnglish}</Link>
+            <Link to={`/categories/${category.parent.id}`}>{primaryName(category.parent, language)}</Link>
           </>
         )}
         {' / '}
-        <span style={{ color: 'var(--color-text-muted)' }}>{category.nameEnglish}</span>
+        <span style={{ color: 'var(--color-text-muted)' }}>{primaryName(category, language)}</span>
       </nav>
 
-      <h1 style={{ marginBottom: '1.5rem' }}>{category.nameEnglish}</h1>
+      <h1 style={{ marginBottom: '1.5rem' }}>{primaryName(category, language)}</h1>
 
       {/* Cheapest Products */}
       {stats?.cheapest && stats.cheapest.length > 0 && (
@@ -117,7 +121,9 @@ function CategoryDetail({ id }: { id: string }) {
                 <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', minWidth: '1.5rem', textAlign: 'right' }}>
                   {index + 1}.
                 </span>
-                <span style={{ flex: 1, fontWeight: 500 }}>{item.name}</span>
+                <span style={{ flex: 1, fontWeight: 500 }}>
+                  {language === 'en' ? (item.nameEnglish ?? item.name) : item.name}
+                </span>
                 <span style={{ fontWeight: 700, color: index === 0 ? 'var(--color-success)' : undefined }}>
                   €{item.minPrice.toFixed(2)}
                 </span>
@@ -133,8 +139,7 @@ function CategoryDetail({ id }: { id: string }) {
           <div className="grid grid-3">
             {category.children.map((child: Category) => (
               <Link key={child.id} to={`/categories/${child.id}`} className="card" style={{ display: 'block' }}>
-                <div style={{ fontWeight: 500 }}>{child.nameEnglish}</div>
-                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{child.name}</div>
+                <div style={{ fontWeight: 500 }}>{primaryName(child, language)}</div>
               </Link>
             ))}
           </div>
@@ -147,8 +152,7 @@ function CategoryDetail({ id }: { id: string }) {
           <div className="grid grid-2">
             {category.products.map((product: Product) => (
               <Link key={product.id} to={`/products/${product.id}`} className="card" style={{ display: 'block' }}>
-                <div style={{ fontWeight: 500 }}>{product.name}</div>
-                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{product.nameEnglish}</div>
+                <div style={{ fontWeight: 500 }}>{primaryName(product, language)}</div>
                 {product.unit && (
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-secondary)', marginTop: '0.25rem' }}>
                     {product.unit}
@@ -164,14 +168,15 @@ function CategoryDetail({ id }: { id: string }) {
 }
 
 function CategoryList() {
-  useDocumentTitle('Categories');
+  const { t, language } = useLanguage();
+  useDocumentTitle(t('categories.title'));
   const { data: categories, loading, error } = useApi(
     () => api.getCategories(),
     []
   );
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return <div className="loading">{t('common.loading')}</div>;
   }
 
   if (error) {
@@ -180,15 +185,14 @@ function CategoryList() {
 
   return (
     <div>
-      <h1 style={{ marginBottom: '1.5rem' }}>Categories</h1>
+      <h1 style={{ marginBottom: '1.5rem' }}>{t('categories.title')}</h1>
       <div className="grid grid-3">
         {categories?.map((category: Category) => (
           <Link key={category.id} to={`/categories/${category.id}`} className="card" style={{ display: 'block' }}>
-            <div style={{ fontWeight: 500 }}>{category.nameEnglish}</div>
-            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{category.name}</div>
+            <div style={{ fontWeight: 500 }}>{primaryName(category, language)}</div>
             {category.children && (
               <div style={{ fontSize: '0.75rem', color: 'var(--color-secondary)', marginTop: '0.5rem' }}>
-                {category.children.length} subcategories
+                {category.children.length} {t('categories.subcategories')}
               </div>
             )}
           </Link>

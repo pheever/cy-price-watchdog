@@ -36,6 +36,8 @@ export interface Store {
   name: string;
   nameEnglish: string | null;
   chain: string | null;
+  district: string | null;
+  location: string | null;
 }
 
 export interface Price {

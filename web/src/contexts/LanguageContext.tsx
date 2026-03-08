@@ -15,6 +15,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.categories': 'Κατηγορίες',
     'nav.about': 'Σχετικά',
     'nav.sources': 'Πηγές',
+    'nav.stores': 'Καταστήματα',
 
     // Dashboard
     'dashboard.title': 'Πίνακας',
@@ -76,6 +77,10 @@ const translations: Record<Language, Record<string, string>> = {
     'categories.allCategories': 'Όλες οι Κατηγορίες',
     'categories.cheapest': 'Φθηνότερα σε αυτή την κατηγορία',
 
+    // Stores
+    'stores.title': 'Καταστήματα',
+    'stores.unknownDistrict': 'Ανεξάρτητα',
+
     // Common
     'common.loading': 'Φόρτωση...',
     'common.error': 'Σφάλμα',
@@ -87,6 +92,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.categories': 'Categories',
     'nav.about': 'About',
     'nav.sources': 'Sources',
+    'nav.stores': 'Stores',
 
     // Dashboard
     'dashboard.title': 'Dashboard',
@@ -147,6 +153,10 @@ const translations: Record<Language, Record<string, string>> = {
     'categories.subcategories': 'Subcategories',
     'categories.allCategories': 'All Categories',
     'categories.cheapest': 'Cheapest in this category',
+
+    // Stores
+    'stores.title': 'Stores',
+    'stores.unknownDistrict': 'Independent',
 
     // Common
     'common.loading': 'Loading...',

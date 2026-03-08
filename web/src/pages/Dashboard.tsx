@@ -115,6 +115,7 @@ export default function Dashboard() {
           icon="fa-store"
           label={t('dashboard.stores')}
           value={stats.counts.stores}
+          to="/stores"
         />
         <StatCard
           icon="fa-tags"

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { api } from '../lib/api';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 function formatDate(dateString: string, language: string): string {
   return new Date(dateString).toLocaleString(language === 'el' ? 'el-GR' : 'en-GB', {
@@ -49,6 +50,7 @@ function StatCard({ icon, label, value, to }: StatCardProps) {
 
 export default function Dashboard() {
   const { language, t } = useLanguage();
+  useDocumentTitle();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { data: stats, loading, error } = useApi(() => api.getStats(), []);

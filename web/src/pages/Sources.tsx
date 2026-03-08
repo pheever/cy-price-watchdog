@@ -1,7 +1,9 @@
 import { useLanguage } from '../contexts/LanguageContext';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function Sources() {
   const { t } = useLanguage();
+  useDocumentTitle(t('sources.title'));
 
   return (
     <div>

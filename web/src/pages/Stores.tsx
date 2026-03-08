@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { api, type Store } from '../lib/api';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const districtLabels: Record<string, { el: string; en: string }> = {
   'ΛΕΥΚΩΣΙΑ': { el: 'Λευκωσία', en: 'Nicosia' },
@@ -74,6 +75,7 @@ function groupByDistrict(stores: Store[]): Record<string, Store[]> {
 
 export default function Stores() {
   const { t, language } = useLanguage();
+  useDocumentTitle(t('stores.title'));
   const { data: stores, loading, error } = useApi(() => api.getStores(), []);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 

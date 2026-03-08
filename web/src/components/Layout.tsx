@@ -24,6 +24,7 @@ export default function Layout() {
           </Link>
           <nav style={{ display: 'flex', gap: '1.5rem', flex: 1 }}>
             <Link to="/categories">{t('nav.categories')}</Link>
+            <Link to="/stores">{t('nav.stores')}</Link>
             <Link to="/about">{t('nav.about')}</Link>
             <Link to="/sources">{t('nav.sources')}</Link>
           </nav>

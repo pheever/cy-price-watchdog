@@ -2,6 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { api, type StoreStats } from '../lib/api';
+
+const districtLabels: Record<string, { el: string; en: string }> = {
+  'ΛΕΥΚΩΣΙΑ':   { el: 'Λευκωσία',   en: 'Nicosia' },
+  'ΛΕΜΕΣΟΣ':    { el: 'Λεμεσός',    en: 'Limassol' },
+  'ΛΑΡΝΑΚΑ':    { el: 'Λάρνακα',    en: 'Larnaca' },
+  'ΠΑΦΟΣ':      { el: 'Πάφος',      en: 'Paphos' },
+  'ΑΜΜΟΧΩΣΤΟΣ': { el: 'Αμμόχωστος', en: 'Famagusta' },
+};
 import { useLanguage } from '../contexts/LanguageContext';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
@@ -24,6 +32,7 @@ export default function ProductDetail() {
 
   // State for table features
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
   const [sortField, setSortField] = useState<SortField>('current');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
@@ -40,6 +49,15 @@ export default function ProductDetail() {
     [id]
   );
 
+  const { data: stores } = useApi(() => api.getStores(), []);
+  const storeDistrictMap = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    for (const store of stores ?? []) {
+      map[store.id] = store.district ?? null;
+    }
+    return map;
+  }, [stores]);
+
   // Handle scroll for back-to-top button
   useEffect(() => {
     const handleScroll = () => {
@@ -54,6 +72,11 @@ export default function ProductDetail() {
     if (!stats?.byStore) return [];
 
     let result = [...stats.byStore];
+
+    // Filter by district
+    if (selectedDistrict) {
+      result = result.filter((store) => storeDistrictMap[store.storeId] === selectedDistrict);
+    }
 
     // Filter by search
     if (searchQuery) {
@@ -92,7 +115,7 @@ export default function ProductDetail() {
     });
 
     return result;
-  }, [stats?.byStore, searchQuery, sortField, sortDirection]);
+  }, [stats?.byStore, searchQuery, selectedDistrict, storeDistrictMap, sortField, sortDirection]);
 
   const visibleStores = filteredAndSortedStores.slice(0, visibleCount);
   const hasMore = visibleCount < filteredAndSortedStores.length;
@@ -241,9 +264,17 @@ export default function ProductDetail() {
             {stats.byDistrict.map((district) => {
               const isLowest = district.avg === Math.min(...stats.byDistrict.map(d => d.avg));
               const isHighest = district.avg === Math.max(...stats.byDistrict.map(d => d.avg));
+              const isActive = selectedDistrict === district.district;
+              const label = districtLabels[district.district]
+                ? (language === 'en' ? districtLabels[district.district]!.en : districtLabels[district.district]!.el)
+                : district.district;
               return (
                 <div
                   key={district.district}
+                  onClick={() => {
+                    setSelectedDistrict(isActive ? '' : district.district);
+                    setVisibleCount(ITEMS_PER_PAGE);
+                  }}
                   style={{
                     padding: '1rem',
                     borderRadius: '8px',
@@ -252,11 +283,15 @@ export default function ProductDetail() {
                       : isHighest
                       ? 'rgba(239, 68, 68, 0.1)'
                       : 'var(--color-bg)',
-                    border: '1px solid var(--color-border)',
+                    border: isActive ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                    cursor: 'pointer',
+                    userSelect: 'none',
                   }}
                 >
-                  <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{district.district}</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+                  <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>
+                    <span>{label}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.25rem', marginTop: '0' }}>
                     <span style={{ color: 'var(--color-text-muted)' }}>{t('product.avg')}:</span>
                     <span style={{ fontWeight: 600, color: isLowest ? 'var(--color-success)' : isHighest ? 'var(--color-error)' : undefined }}>
                       €{district.avg.toFixed(2)}
@@ -277,7 +312,25 @@ export default function ProductDetail() {
       {stats?.byStore && stats.byStore.length > 0 && (
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <h2 style={{ fontSize: '1.25rem', margin: 0 }}>{t('product.pricesByStore')}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <h2 style={{ fontSize: '1.25rem', margin: 0 }}>{t('product.pricesByStore')}</h2>
+              {selectedDistrict && (
+                <button
+                  onClick={() => { setSelectedDistrict(''); setVisibleCount(ITEMS_PER_PAGE); }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                    padding: '0.2rem 0.6rem', borderRadius: '999px',
+                    border: '1px solid var(--color-primary)', background: 'transparent',
+                    color: 'var(--color-primary)', fontSize: '0.8rem', cursor: 'pointer',
+                  }}
+                >
+                  {districtLabels[selectedDistrict]
+                    ? (language === 'en' ? districtLabels[selectedDistrict]!.en : districtLabels[selectedDistrict]!.el)
+                    : selectedDistrict}
+                  <i className="fa-solid fa-xmark"></i>
+                </button>
+              )}
+            </div>
             <div className="search-wrapper" style={{ width: '300px', maxWidth: '100%' }}>
               <i className="fa-solid fa-magnifying-glass"></i>
               <input
@@ -292,6 +345,7 @@ export default function ProductDetail() {
               />
             </div>
           </div>
+
 
           {/* Desktop Table */}
           <div className="data-table-wrapper">

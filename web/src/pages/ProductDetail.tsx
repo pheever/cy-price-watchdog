@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { api, type StoreStats } from '../lib/api';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 function formatDate(dateString: string, language: string): string {
   return new Date(dateString).toLocaleDateString(language === 'el' ? 'el-GR' : 'en-GB', {
@@ -32,6 +33,7 @@ export default function ProductDetail() {
     () => api.getProduct(id!),
     [id]
   );
+  useDocumentTitle(product?.name ?? undefined);
 
   const { data: stats } = useApi(
     () => api.getProductStats(id!),

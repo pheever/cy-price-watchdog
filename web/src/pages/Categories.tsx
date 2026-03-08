@@ -2,9 +2,11 @@ import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { api, type Category, type Product } from '../lib/api';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 function SearchResults({ query }: { query: string }) {
   const { t } = useLanguage();
+  useDocumentTitle(`Search: "${query}"`);
   const { data: products, loading, error } = useApi(
     () => api.getProducts({ search: query, limit: 50 }),
     [query]
@@ -57,6 +59,7 @@ function CategoryDetail({ id }: { id: string }) {
     () => api.getCategory(id),
     [id]
   );
+  useDocumentTitle(category?.nameEnglish ?? undefined);
   const isSubcategory = category && (!category.children || category.children.length === 0);
   const { data: stats } = useApi(
     () => isSubcategory ? api.getCategoryStats(id) : Promise.resolve({ data: null, error: null, meta: null }),
@@ -161,6 +164,7 @@ function CategoryDetail({ id }: { id: string }) {
 }
 
 function CategoryList() {
+  useDocumentTitle('Categories');
   const { data: categories, loading, error } = useApi(
     () => api.getCategories(),
     []

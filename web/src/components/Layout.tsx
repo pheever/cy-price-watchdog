@@ -58,7 +58,7 @@ export default function Layout() {
             }}
             title={language === 'el' ? 'Switch to English' : 'Αλλαγή σε Ελληνικά'}
           >
-            <i className="fa-solid fa-language"></i>
+            <span>{language === 'el' ? '🇬🇧' : '🇬🇷'}</span>
             <span>{language === 'el' ? 'EN' : 'ΕΛ'}</span>
           </button>
         </div>
